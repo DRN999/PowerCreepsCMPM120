@@ -223,8 +223,12 @@ function on_click(pointer, event)
 			}
 			else if(event.button == 0)
 			{
-				
-				if(Math.abs(index_x - layer1.getTileX(ally.x)) + Math.abs(index_y - layer1.getTileY(ally.y)) <= ally.stats.movement)
+				var map_y = 8 + (index_x - layer1.getTileX(ally.x));
+				var map_x = 8 + (index_y - layer1.getTileY(ally.y));
+				console.log("mpx: " + map_x);
+				console.log("mpy: " + map_y);
+				console.log(ally.map[map_x][map_y]);
+				if(ally.map[map_x][map_y] > 0)
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
@@ -236,6 +240,20 @@ function on_click(pointer, event)
 					ally.update_bounds();
 					ally.bounds.alpha = 0.0;
 				}
+				/*
+				if(Math.abs(index_x - layer1.getTileX(ally.x)) + Math.abs(index_y - layer1.getTileY(ally.y)) < ally.stats.movement)
+				{
+					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
+					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
+					ally.x = index_x * 48;
+					ally.y = index_y * 48;
+					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = true;
+					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
+					mode = 2;
+					ally.update_bounds();
+					ally.bounds.alpha = 0.0;
+				}
+				*/
 			}
 		break;
 		

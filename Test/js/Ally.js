@@ -16,6 +16,26 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 		spd: 8
 	};
 	
+	this.map = [
+		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
+		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
+		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
+		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
+		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
+		[0,1,2,3,4,5,6,7,8,7,6,5,4,3,2,1,0],
+		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
+		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
+		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
+		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
+		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]	
+	];
+	
 	this.tile_coord = 
 	{
 		x: () => layer1.getTileX(this.x),
@@ -40,9 +60,11 @@ Ally.prototype.update_bounds = function()
 	{
 		for(var j = 0; j <= this.stats.movement * 2; j++)
 		{
+			
 			var draw = true;
 			var bound_x = i - this.stats.movement;
 			var bound_y = j - this.stats.movement;
+			/*
 			if(bound_x < 0 && bound_y < 0)
 				draw = (bound_x + bound_y < this.stats.movement * -1) ? false : true;
 			else if(bound_x < 0 && bound_y > 0)
@@ -55,6 +77,9 @@ Ally.prototype.update_bounds = function()
 			if(draw){
 				var rect = this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
 			}
+			*/
+			if(this.map[j][i] > 0)
+				var rect = this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
 		}
 	}
 }
