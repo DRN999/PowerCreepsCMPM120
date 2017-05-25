@@ -1,4 +1,4 @@
-// play state of the game 
+// gane_over state of the game 
 
 var game_over = 
 {// the game_over screen 
@@ -10,12 +10,10 @@ var game_over =
 	},// End preload 
 	
 	create: function()
-	{// create play_state
+	{// game over screen will be here 
 		
 		console.log('gameover:create');
 		
 	}// End create 
-
-	
 	
 };

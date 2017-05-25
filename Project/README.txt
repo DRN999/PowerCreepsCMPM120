@@ -16,7 +16,15 @@ Files:
 		Enemy.js
 		play_state.js 
 		game_over.js 
-		
+
+How to play:
+Movement: WASD 
+Objective: you are the white box at the bottom and the objective is to 
+get from the bottom end to the top end of the screen.
+The game will be over when you hit one of the enemies
+The game will reset when you get to the top of the screen.
+THe game will continue until you hit an enemy 
+
 		
 This is a very basic prototype of the game(stealth action game) that we are going to start off with. The graphics are beyond 
 simple and they are only placeholders to replace later with. 
@@ -30,8 +38,9 @@ dealth with an enourmous square hit box)
 The game will be a stealth action game with the objective to survive and not get found by these enemies 
 The game will give multiple options along the way that will alter the ending of the game. 
 
-		
-		
+Git-repo:
+https://github.com/DRN999/PowerCreepsCMPM120.git
+
 		
 		
 

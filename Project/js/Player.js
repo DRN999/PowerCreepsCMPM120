@@ -1,3 +1,4 @@
+// Player Object 
 
 function Player(game, key, frame, size, p_x, p_y, scale)
 {// Player Constructor 
@@ -11,8 +12,7 @@ function Player(game, key, frame, size, p_x, p_y, scale)
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
-	// used addKey instead of putting it in the update function, 
-	// can comment out and use the commented section in update function instead (details in README)
+	// add key events (movement keys WASD
 	var key_up = game.input.keyboard.addKey(Phaser.Keyboard.W);
 	key_up.onDown.add(() => { // add keyboard event
 		move_up = true;

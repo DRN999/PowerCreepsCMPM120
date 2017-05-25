@@ -228,7 +228,7 @@ function on_click(pointer, event)
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
 				console.log(ally.map[map_x][map_y]);
-				if(ally.map[map_x][map_y] > 0)
+				if(ally.map_bool[map_x][map_y])
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
