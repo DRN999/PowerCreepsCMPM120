@@ -25,6 +25,9 @@ function preload() {
 	game.load.image('Outside5', 'assets/tileset/SF_Outside_C.png');
 	game.load.image('diamond','assets/img/diamond.png');
 	game.load.image('Square', 'assets/img/Square.jpg');
+	game.load.image('placeholder', 'assets/img/placeholder.png');
+	game.load.image('standbutton', 'assets/img/standbutton.png');
+	game.load.image('attackbutton', 'assets/img/attackbutton.png');
 	
 }
 
@@ -40,6 +43,7 @@ var move_up = false;
 var move_down = false;
 var move_left = false;
 var move_right = false;
+var paused = false;
 
 
 var marker; // rectangular marker on the field 
@@ -106,9 +110,6 @@ function create()
     layer1 = map.createLayer('Decoration 1');
 	layer2 = map.createLayer('Decoration 2');
 	layer3 = map.createLayer('Decoration 3');
-	var test_array = layer2.getTiles(0, 48 * 5, 48 * 12, 1);
-	for(var i = 0; i < test_array.length; i++)
-		console.log(test_array[i].index == -1 ? false : true);
     //  This resizes the game world to match the layer dimensions
     // layer.resizeWorld();
    
@@ -147,6 +148,12 @@ function create()
 	// add click event 
 	game.input.onDown.add(on_click, this)
 	console.log("your turn");
+	
+	
+	
+	
+	
+	
 }
 
 function update()
@@ -231,7 +238,7 @@ function on_click(pointer, event)
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
 				console.log(ally.map[map_x][map_y]);
-				if(ally.map_bool[map_x][map_y])
+				if(ally.map[map_x][map_y] > 0)
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
@@ -249,7 +256,7 @@ function on_click(pointer, event)
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
 					ally.x = index_x * 48;
-					ally.y = index_y * 48;
+					ally.y = index_y * 48; 
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = true;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
 					mode = 2;
@@ -258,6 +265,17 @@ function on_click(pointer, event)
 				}
 				*/
 			}
+		placeholder = game.add.sprite(game.camera.x - 20, game.camera.y + 500, 'placeholder');
+		
+		attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
+		standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
+		attackbutton.onInputUp.add(upAttack, this);
+		attackbutton.onInputUp.add(overAttack, this);
+		standbutton.onInputUp.add(upStand, this);
+		standbutton.onInputUp.add(overStand, this);
+		
+		game.paused = true;
+		console.log('moved'); //here is where the menu should be called to pop up.
 		break;
 		
 		case 2: break; // there should be nothing during mode 2
@@ -266,3 +284,21 @@ function on_click(pointer, event)
 	
 }// End on_click
 
+//button functions, up* functions are when the click is released, perform attack within this function.
+function upAttack() {
+    console.log('button up', arguments);
+}
+function overAttack() {
+    console.log('button over');
+}
+
+
+
+function upStand() {
+    console.log('button up', arguments);
+}
+function overStand() {
+    console.log('button over');
+}
+
+//need some detection to provide attack button when enemy is in range only

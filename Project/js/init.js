@@ -1,7 +1,6 @@
 // Noriaki Nakano 
 // nnakano@ucsc.edu 
 // init variables 
-
 var game;
 var player;
 var enemies = new Array();
