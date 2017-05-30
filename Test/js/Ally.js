@@ -9,7 +9,7 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	this.body.collideWorldBounds = false;
 	
 	this.stats = { // status of the ally 
-		movement: 8,
+		movement: 7,
 		health: 20,
 		def: 0,
 		atk: 5,
@@ -36,25 +36,7 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]	
 	];
 	
-	this.map_wall = [ // tile wall information, will be updated through tile analyzation 
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-	];
+	this.map_wall = this.get_new_map();
 	
 	this.map_bool = this.get_new_map_boolean();
 	
@@ -99,6 +81,21 @@ Ally.prototype.update = function()
 	
 	
 }// End update 
+
+Ally.prototype.get_new_map = function()
+{
+	var ret = new Array();
+	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
+	{
+		var temp = new Array();
+		for(var j = 0; j < this.stats.movement * 2 + 1; j++)
+		{
+			temp.push(1);
+		}
+		ret.push(temp);
+	}
+	return ret;
+}
 
 Ally.prototype.get_new_map_boolean = function()
 {// returns a new 17x17 array filled with boolean:false 

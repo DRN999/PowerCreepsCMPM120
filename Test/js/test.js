@@ -226,11 +226,10 @@ function on_click(pointer, event)
 			}
 			else if(event.button == 0)
 			{
-				var map_y = 8 + (index_x - layer1.getTileX(ally.x));
-				var map_x = 8 + (index_y - layer1.getTileY(ally.y));
+				var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
+				var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
-				console.log(ally.map[map_x][map_y]);
 				if(ally.map_bool[map_x][map_y])
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
