@@ -106,6 +106,9 @@ function create()
     layer1 = map.createLayer('Decoration 1');
 	layer2 = map.createLayer('Decoration 2');
 	layer3 = map.createLayer('Decoration 3');
+	var test_array = layer2.getTiles(0, 48 * 5, 48 * 12, 1);
+	for(var i = 0; i < test_array.length; i++)
+		console.log(test_array[i].index == -1 ? false : true);
     //  This resizes the game world to match the layer dimensions
     // layer.resizeWorld();
    

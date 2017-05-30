@@ -115,13 +115,63 @@ Ally.prototype.get_new_map_boolean = function()
 	return ret;
 }// End get_new_map_boolean 
 
+Ally.prototype.update_map_wall = function()
+{
+	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
+	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
+	if(this.tile_coord.x() - this.stats.movement < 0)
+	{
+		for(var i = 0; i < this.stats.movement * 2 + 1; i++)
+		{
+			for(var j = 0; j < this.stats.movement - this.tile_coord.x(); j++)
+				wall_arr.splice(i * (this.stats.movement * 2 + 1), 0, {index: 100});
+		}	
+	}
+	else if(this.tile_coord.x() + this.stats.movement > 49)
+	{
+		for(var i = 0; i < this.stats.movement * 2 + 1; i++)
+		{
+			for(var j = 0; j < this.tile_coord.x() + this.stats.movement - 49; j++)
+				wall_arr.splice(i * (this.stats.movement * 2 + 1) + (this.stats.movement * 2 + 1) - (this.tile_coord.x() + this.stats.movement - 49), 0, {index: 100});
+		}
+		
+	}
+	
+	if(this.tile_coord.y() - this.stats.movement < 0)
+	{
+		for(var i = 0; i < this.stats.movement - this.tile_coord.y(); i++)
+			for(var j = 0; j < this.stats.movement * 2 + 1; j++)
+				wall_arr.unshift({index: 100});
+	}
+	else if(this.tile_coord.y() + this.stats.movement > 49)
+	{
+		for(var i = 0; i < this.tile_coord.y() + this.stats.movement - 49; i++)
+			for(var j = 0; j < this.stats.movement * 2 + 1; j++)
+				wall_arr.push({index: 100});
+	}
+	console.log(wall_arr);
+	for(var i = 0; i < this.map_wall.length; i++)
+	{
+		for(var j = 0; j < this.map_wall[i].length; j++)
+		{
+			if(wall_arr[i * this.map_wall.length + j].index == -1)
+				this.map_wall[i][j] = 1;
+			else
+				this.map_wall[i][j] = 99;
+		}
+	}
+	
+	console.log(this.map_wall);
+}
+
 Ally.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
 	var map_b = this.get_new_map_boolean();
-	var current_x = 8; // current node location x
-	var current_y = 8; // current node location y 
+	this.update_map_wall();
+	var current_x = this.stats.movement; // current node location x
+	var current_y = this.stats.movement; // current node location y 
 	var current_node = new Array();
-	current_node.push([{x: 8, y: 8}]);
+	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
 	map_b[current_y][current_x] = true // init first boolean array point 
 	for(var iter = 0; iter < this.stats.movement; iter++)
 	{// iterates through the number of movements the character can make 
