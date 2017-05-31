@@ -57,6 +57,7 @@ var menu = false;
 
 var tile_data = init_tiledata(50,50);// contains the data of each tile 
 
+var dark;
 function init_tiledata(width, height) 
 {// inititalize tile_data 
 	var ret = new Array();
@@ -71,6 +72,7 @@ function init_tiledata(width, height)
 				occupied: false,
 				name: "floor",
 				occupant: null
+				
 			});
 		}
 		ret.push(temp);
@@ -144,6 +146,9 @@ function create()
 	game.add.existing(controller); 
 	game.camera.follow(controller);
 	
+	dark = new Darkness(game, 50, 50);
+	game.add.existing(dark);
+	dark.draw_darkmap();
 	// add click event 
 	game.input.onDown.add(on_click, this)
 	console.log("your turn");

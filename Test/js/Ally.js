@@ -51,7 +51,7 @@ Ally.prototype.update_bounds = function()
 			var bound_y = j - this.stats.movement;
 			
 			if(this.map_bool[j][i])
-				var rect = this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
+				this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
 		}
 	}
 }// End update_bounds 
