@@ -1,6 +1,6 @@
 
 function Ally(game, key, frame, size, p_x, p_y, scale) 
-{
+{// constructor 
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	
 	this.scale.x = scale // set the scales 
@@ -16,29 +16,9 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 		spd: 8
 	};
 	
-	this.map = [ // the basic map 
-		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
-		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
-		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
-		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
-		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
-		[0,1,2,3,4,5,6,7,8,7,6,5,4,3,2,1,0],
-		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
-		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
-		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
-		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
-		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]	
-	];
+	this.map_wall = this.get_new_map(); // init wall map 
 	
-	this.map_wall = this.get_new_map();
-	
-	this.map_bool = this.get_new_map_boolean();
+	this.map_bool = this.get_new_map_boolean(); // init movement boolean 
 	
 	this.tile_coord = 
 	{// gets the tile coordinate of this character 
@@ -62,7 +42,7 @@ Ally.prototype.update_bounds = function()
     this.bounds.lineStyle(2, 0x0000FF, 1);
 	this.bounds.beginFill(0x0000FF);
 	for(var i = 0; i <= this.stats.movement * 2; i++)
-	{
+	{// draw blue into movement area 
 		for(var j = 0; j <= this.stats.movement * 2; j++)
 		{
 			
@@ -83,7 +63,7 @@ Ally.prototype.update = function()
 }// End update 
 
 Ally.prototype.get_new_map = function()
-{
+{// create initial map 
 	var ret = new Array();
 	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
 	{
@@ -95,7 +75,7 @@ Ally.prototype.get_new_map = function()
 		ret.push(temp);
 	}
 	return ret;
-}
+}// End get_new_map 
 
 Ally.prototype.get_new_map_boolean = function()
 {// returns a new 17x17 array filled with boolean:false 
@@ -118,7 +98,7 @@ Ally.prototype.update_map_wall = function()
 	// get tiles of the surrounding area with the movement area 
 	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
 	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
-	console.log(wall_arr);
+	
 	// check for x-axis overflow 
 	if(this.tile_coord.x() - this.stats.movement < 0)
 	{
@@ -167,20 +147,22 @@ Ally.prototype.update_map_wall = function()
 
 Ally.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
-	var map_b = this.get_new_map_boolean();
-	this.update_map_wall();
+	var map_b = this.get_new_map_boolean(); // init boolean 
+	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
 	var current_y = this.stats.movement; // current node location y 
-	var current_node = new Array();
+	var current_node = new Array(); // current node tree 
 	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
 	map_b[current_y][current_x] = true // init first boolean array point 
 	for(var iter = 0; iter < this.stats.movement; iter++)
 	{// iterates through the number of movements the character can make 
-		var temp = new Array();
+		var temp = new Array(); 
 		for(var tr = 0; tr < current_node[iter].length; tr++)
 		{// iterates through the array of object, pushes the unused tiles 
 			current_x = current_node[iter][tr].x;
 			current_y = current_node[iter][tr].y;
+			
+			// checks each side if it was already searched, and markes them as moveable  
 			if(this.map_wall[current_y - 1][current_x] != 99 && map_b[current_y - 1][current_x] == false)
 			{
 				temp.push({x: current_x, y: current_y - 1});
@@ -202,11 +184,10 @@ Ally.prototype.dijkstra = function()
 				map_b[current_y][current_x + 1] = true;
 			}
 		}
+		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
 	console.log(current_node);
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
-
-
 
