@@ -287,6 +287,14 @@ function on_click(pointer, event)
 //button functions, up* functions are when the click is released, perform attack within this function.
 function upAttack() {
     console.log('button up', arguments);
+	// attack should happen here
+	
+	
+	
+	game.paused = false;
+	placeholder.destroy();
+	standbutton.destroy();
+	attackbutton.destroy();
 }
 function overAttack() {
     console.log('button over');
@@ -296,9 +304,33 @@ function overAttack() {
 
 function upStand() {
     console.log('button up', arguments);
+	//stand happens here
+	
+	
+	game.paused = false;
+	placeholder.destroy();
+	standbutton.destroy();
+	attackbutton.destroy();
 }
 function overStand() {
     console.log('button over');
 }
 
 //need some detection to provide attack button when enemy is in range only
+
+function unpause(event)
+{
+	if(game.paused){
+		
+		var key_esc = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+		key_esc.onDown.add(function(){
+		
+			// Remove the menu and the label
+			
+			//choiseLabel.destroy();
+			
+			// Unpause the game
+			
+		});
+	}
+}

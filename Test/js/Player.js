@@ -54,27 +54,8 @@ function Player(game, key, frame, size, p_x, p_y, scale)
 		this.counter_delta = 5;
 	}, this);
 	
-	game.input.onDown.add(unpause, self);
-	
-	function unpause(event)
-	{
-		if(game.paused){
-				
-				var key_esc = game.input.keyboard.addKey(Phaser.Keyboard.ESC);
-				key_esc.onDown.add(function(){
-				//else{
-					// Remove the menu and the label
-					placeholder.destroy();
-					standbutton.destroy();
-					attackbutton.destroy();
-					//choiseLabel.destroy();
-
-					// Unpause the game
-					game.paused = false;
-				//}
-				});
-			}
-	}
+	//event listener for unpausing
+	game.input.onDown.add(unpause, self); 
 	
 	
 	this.counter = 0;
