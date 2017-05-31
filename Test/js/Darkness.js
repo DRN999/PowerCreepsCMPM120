@@ -1,11 +1,11 @@
 
 
 function Darkness(game, tile_width, tile_height)
-{
+{// constructor 
 	Phaser.Graphics.call(this, game, 0, 0)
 	this.dark_map = this.get_new_darkmap(tile_width, tile_height);
 	this.alpha = 1;
-}
+}// End constructor 
 
 Darkness.prototype = Object.create(Phaser.Graphics.prototype);
 Darkness.prototype.constructor = Darkness;
