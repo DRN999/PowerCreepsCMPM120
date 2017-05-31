@@ -113,9 +113,13 @@ Ally.prototype.get_new_map_boolean = function()
 }// End get_new_map_boolean 
 
 Ally.prototype.update_map_wall = function()
-{
+{// updates the wall information of the surrounding tiles 
+	
+	// get tiles of the surrounding area with the movement area 
 	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
 	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
+	console.log(wall_arr);
+	// check for x-axis overflow 
 	if(this.tile_coord.x() - this.stats.movement < 0)
 	{
 		for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -133,7 +137,7 @@ Ally.prototype.update_map_wall = function()
 		}
 		
 	}
-	
+	// check for y-axis overflow 
 	if(this.tile_coord.y() - this.stats.movement < 0)
 	{
 		for(var i = 0; i < this.stats.movement - this.tile_coord.y(); i++)
@@ -146,7 +150,8 @@ Ally.prototype.update_map_wall = function()
 			for(var j = 0; j < this.stats.movement * 2 + 1; j++)
 				wall_arr.push({index: 100});
 	}
-	console.log(wall_arr);
+	
+	// convert the information into array 
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
@@ -158,8 +163,7 @@ Ally.prototype.update_map_wall = function()
 		}
 	}
 	
-	console.log(this.map_wall);
-}
+}// End update_map_wall 
 
 Ally.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
