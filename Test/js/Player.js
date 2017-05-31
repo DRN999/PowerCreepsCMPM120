@@ -54,10 +54,6 @@ function Player(game, key, frame, size, p_x, p_y, scale)
 		this.counter_delta = 5;
 	}, this);
 	
-	//event listener for unpausing
-	game.input.onDown.add(unpause, self); 
-	
-	
 	this.counter = 0;
 	this.counter_delta = 5;
 	
