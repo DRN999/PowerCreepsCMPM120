@@ -29,6 +29,7 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	this.bounds = game.add.graphics();
 	this.update_bounds();
 	this.bounds.alpha = 0.0;
+	this.dijikstra_tree;
 	
 }// End create 
 
@@ -167,7 +168,7 @@ Ally.prototype.dijkstra = function()
 	var current_x = this.stats.movement; // current node location x
 	var current_y = this.stats.movement; // current node location y 
 	var current_node = new Array(); // current node tree 
-	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
+	current_node.push([{x: this.stats.movement, y: this.stats.movement, next: new Array()}]);
 	map_b[current_y][current_x] = true // init first boolean array point 
 	for(var iter = 0; iter < this.stats.movement; iter++)
 	{// iterates through the number of movements the character can make 
@@ -180,28 +181,38 @@ Ally.prototype.dijkstra = function()
 			// checks each side if it was already searched, and markes them as moveable  
 			if(this.map_wall[current_y - 1][current_x] != 99 && map_b[current_y - 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y - 1});
+				var obj = {x: current_x, y: current_y - 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y - 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x - 1] != 99 && map_b[current_y][current_x - 1] == false)
 			{
-				temp.push({x: current_x - 1, y: current_y});
+				var obj = {x: current_x - 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y][current_x - 1] = true;
 			}
 			if(this.map_wall[current_y + 1][current_x] != 99 && map_b[current_y + 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y + 1});
+				var obj = {x: current_x, y: current_y + 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y + 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x + 1] != 99 && map_b[current_y][current_x + 1] == false)
 			{
-				temp.push({x: current_x + 1, y: current_y});
+				var obj = {x: current_x + 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y][current_x + 1] = true;
 			}
 		}
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
+	console.log(current_node);
+	this.dijikstra_tree = current_node[0][0];
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
@@ -252,4 +263,27 @@ Ally.prototype.darkness_dijikstra = function()
 	console.log("darkness_dijikstra");
 	console.log(current_node);
 	return current_node;
+}
+
+Ally.prototype.dijikstra_tree_search = function(x, y, tree, stack)
+{
+	if(tree.next.length == 0)
+	{
+		if(tree.x == x && tree.y == y)
+		{
+			stack.push(tree);
+			console.log("push: " + tree.x + " " + tree.y + " end_return");
+			return true;
+		}
+		return false;
+	}
+	for(var i = 0; i < tree.next.length; i++)
+	{
+		console.log("push: " + tree.x + " " + tree.y);
+		stack.push(tree);
+		if(this.dijikstra_tree_search(x, y, tree.next[i],stack))
+			return true;
+		stack.pop();
+	}
+	return false;
 }
