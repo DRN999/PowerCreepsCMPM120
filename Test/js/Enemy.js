@@ -1,24 +1,44 @@
-
-function Ally(game, key, frame, size, p_x, p_y, scale) 
-{// constructor 
+function Enemy(game, key, frame, size, p_x, p_y, scale) 
+{
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
-	
+	counter = 1;
 	this.scale.x = scale // set the scales 
 	this.scale.y = scale; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
 	this.stats = { // status of the ally 
-		movement: 7,
+		movement: 8,
 		health: 20,
+		maxhealth:20,
 		def: 0,
 		atk: 5,
-		spd: 8
+		spd: 4
 	};
 	
-	this.map_wall = this.get_new_map(); // init wall map 
+	this.map = [ // the basic map 
+		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
+		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
+		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
+		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
+		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
+		[0,1,2,3,4,5,6,7,8,7,6,5,4,3,2,1,0],
+		[0,0,1,2,3,4,5,6,7,6,5,4,3,2,1,0,0],
+		[0,0,0,1,2,3,4,5,6,5,4,3,2,1,0,0,0],
+		[0,0,0,0,1,2,3,4,5,4,3,2,1,0,0,0,0],
+		[0,0,0,0,0,1,2,3,4,3,2,1,0,0,0,0,0],
+		[0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]	
+	];
 	
-	this.map_bool = this.get_new_map_boolean(); // init movement boolean 
+	this.map_wall = this.get_new_map();
+	
+	this.map_bool = this.get_new_map_boolean();
 	
 	this.tile_coord = 
 	{// gets the tile coordinate of this character 
@@ -28,62 +48,15 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	
 	this.bounds = game.add.graphics();
 	this.update_bounds();
-	this.bounds.alpha = 0.0;
 	this.dijikstra_tree;
+	this.bounds.alpha = 0.0;
 	
 }// End create 
 
-Ally.prototype = Object.create(Phaser.Sprite.prototype);
-Ally.prototype.constructor = Ally;
+Enemy.prototype = Object.create(Phaser.Sprite.prototype);
+Enemy.prototype.constructor = Enemy;
 
-Ally.prototype.update_bounds = function()
-{// updates the movement bound of the ally  
-	this.dijkstra();
-	this.update_darkness();
-	
-	dark.draw_darkmap();
-	
-	this.bounds.clear();
-    this.bounds.lineStyle(2, 0x0000FF, 1);
-	this.bounds.beginFill(0x0000FF);
-	for(var i = 0; i <= this.stats.movement * 2; i++)
-	{// draw blue into movement area 
-		for(var j = 0; j <= this.stats.movement * 2; j++)
-		{
-			
-			var draw = true;
-			var bound_x = i - this.stats.movement;
-			var bound_y = j - this.stats.movement;
-			
-			if(this.map_bool[j][i])
-				this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
-		}
-	}
-}// End update_bounds 
-
-Ally.prototype.update_darkness = function()
-{// updates the tile light 
-	var tree = this.darkness_dijikstra();
-	for( var i = 0; i < tree.length; i++)
-	{
-		for(var j = 0; j < tree[i].length; j++)
-		{
-			var change_x = tree[i][j].x - this.stats.movement;
-			var change_y = tree[i][j].y - this.stats.movement;
-			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
-			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
-				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
-		}
-	}
-}// End update_darkness
-
-Ally.prototype.update = function()
-{// update, change direction when the ship reaches the end of the screen 
-	
-	
-}// End update 
-
-Ally.prototype.get_new_map = function()
+Enemy.prototype.get_new_map = function()
 {// create initial map 
 	var ret = new Array();
 	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -98,7 +71,49 @@ Ally.prototype.get_new_map = function()
 	return ret;
 }// End get_new_map 
 
-Ally.prototype.get_new_map_boolean = function()
+Enemy.prototype.update_bounds = function()
+{// updates the movement bound of the ally  
+	
+	this.dijkstra();
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+	dark.draw_darkmap();
+	
+	this.bounds.clear();
+    this.bounds.lineStyle(2, 0xF88383, 1);
+	this.bounds.beginFill(0xF88383);
+	for(var i = 0; i <= this.stats.movement * 2; i++)
+	{
+		for(var j = 0; j <= this.stats.movement * 2; j++)
+		{
+			
+			var draw = true;
+			var bound_x = i - this.stats.movement;
+			var bound_y = j - this.stats.movement;
+			
+			if(this.map_bool[j][i])
+				var rect = this.bounds.drawRect((this.tile_coord.x() + bound_x) * 48, (this.tile_coord.y() + bound_y) * 48, 48, 48);
+		}
+	}
+}// End update_bounds 
+
+Enemy.prototype.update = function()
+{// update, change direction when the ship reaches the end of the screen 
+	
+	
+}// End update 
+
+Enemy.prototype.get_new_map_boolean = function()
 {// returns a new 17x17 array filled with boolean:false 
 	var ret = new Array();
 	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -113,14 +128,10 @@ Ally.prototype.get_new_map_boolean = function()
 	return ret;
 }// End get_new_map_boolean 
 
-Ally.prototype.update_map_wall = function()
-{// updates the wall information of the surrounding tiles 
-	
-	// get tiles of the surrounding area with the movement area 
+Enemy.prototype.update_map_wall = function()
+{
 	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
 	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
-	
-	// check for x-axis overflow 
 	if(this.tile_coord.x() - this.stats.movement < 0)
 	{
 		for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -138,7 +149,7 @@ Ally.prototype.update_map_wall = function()
 		}
 		
 	}
-	// check for y-axis overflow 
+	
 	if(this.tile_coord.y() - this.stats.movement < 0)
 	{
 		for(var i = 0; i < this.stats.movement - this.tile_coord.y(); i++)
@@ -152,32 +163,21 @@ Ally.prototype.update_map_wall = function()
 				wall_arr.push({index: 100});
 	}
 	
-	// convert the information into array 
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
 		{
-			console.log(i + this.tile_coord.x() - this.stats.movement);
-			console.log(j + this.tile_coord.y() - this.stats.movement);
-			console.log(tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement]);
 			if(wall_arr[i * this.map_wall.length + j].index == -1)
 				this.map_wall[i][j] = 1;
-			else if(i + this.tile_coord.x() - this.stats.movement >= 0 && j + this.tile_coord.y() - this.stats.movement >= 0 && tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement].occupant instanceof Enemy)
-			{	
-				console.log(i + this.tile_coord.x() - this.stats.movement);
-				console.log(j + this.tile_coord.y() - this.stats.movement);
-				this.map_wall[i][j] = 99;
-			}
 			else
 				this.map_wall[i][j] = 99;
 		}
 	}
 	
-}// End update_map_wall 
+}
 
-Ally.prototype.dijkstra = function() 
+Enemy.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
-
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
@@ -228,15 +228,17 @@ Ally.prototype.dijkstra = function()
 	}
 	
 	this.dijikstra_tree = current_node[0][0];
+	
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
-Ally.prototype.darkness_dijikstra = function()
+
+Enemy.prototype.darkness_dijikstra = function()
 {// dijikstra search for light 
 
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
-	var current_x = this.stats.movement; // current node location x
+	var current_x = this.stats.movement; // current node location x 
 	var current_y = this.stats.movement; // current node location y 
 	var current_node = new Array(); // current node tree 
 	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
@@ -251,6 +253,7 @@ Ally.prototype.darkness_dijikstra = function()
 			
 			if(this.map_wall[current_y][current_x] == 99)
 				continue;
+			
 			// checks each side if it was already searched, and markes them as moveable  
 			if(map_b[current_y - 1][current_x] == false)
 			{
@@ -280,7 +283,7 @@ Ally.prototype.darkness_dijikstra = function()
 	return current_node;
 }// End darkness_dijikstra
 
-Ally.prototype.dijikstra_tree_search = function(x, y, tree, stack)
+Enemy.prototype.dijikstra_tree_search = function(x, y, tree, stack)
 {// search shortest path 
 	if(tree.next.length == 0)
 	{
@@ -302,3 +305,66 @@ Ally.prototype.dijikstra_tree_search = function(x, y, tree, stack)
 	}
 	return false;
 }// End dijikstra_tree 
+
+
+Enemy.prototype.move = function(allyx,allyy){
+	var allyindex_x = (layer1.getTileX(allyx) - layer1.getTileX(this.x)) + this.stats.movement;
+	var allyindex_y = (layer1.getTileY(allyy) - layer1.getTileY(this.y)) + this.stats.movement;
+	
+	console.log(allyindex_x);
+	console.log(allyindex_y);
+	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = false;
+	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = null;
+	
+	if(this.map_bool[allyindex_y][allyindex_x])
+	{
+			var arr = new Array();
+			console.log(this.dijikstra_tree);
+			this.dijikstra_tree_search(allyindex_x, allyindex_y, this.dijikstra_tree, arr);
+			if(arr.length > 0)
+				arr.pop();
+			console.log(arr);
+			var prev_twn;
+			var first_twn;
+			for(var i = 0; i < arr.length; i++)
+			{// create chained tweens
+				var twn = game.add.tween(this);
+				if(i + 1 == arr.length)
+				{
+					twn.onComplete.add(() => {
+						mode = 0;
+						ally.stats.health = ally.stats.health - this.stats.atk;
+						hpbar.change(ally);
+						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
+						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
+						this.update_bounds();
+						this.bounds.alpha = 0.0;
+					}, this);
+				}
+				twn.to(
+				{// tween to move one block 
+					x: (this.tile_coord.x() + (arr[i].x - this.stats.movement)) * 48, 
+					y: (this.tile_coord.y() + (arr[i].y - this.stats.movement)) * 48
+				}, 50, 'Linear', false, 0);
+				if(i != 0)
+					prev_twn.chain(twn);
+				else if (i == 0)
+					first_twn = twn;
+				prev_twn = twn;	
+			}
+			first_twn.start();
+			mode = 50;
+			
+	}
+	else{
+			this.x = this.x-48;
+			this.y = this.y;
+			console.log("no");
+			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
+			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
+			this.update_bounds();
+			this.bounds.alpha = 0.0;
+	}
+	
+	
+}

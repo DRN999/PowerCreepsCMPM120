@@ -1,7 +1,7 @@
 
 
-var canvas_width = 1280;
-var canvas_height = 720;
+var canvas_width = 1280; 
+var canvas_height = 720; 
 var game = new Phaser.Game(canvas_width, canvas_height, Phaser.AUTO, 'phaser', { preload: preload, create: create, update: update });
 
 function preload() 
@@ -23,27 +23,30 @@ function preload()
 	game.load.image('Outside5', 'assets/tileset/SF_Outside_C.png');
 	game.load.image('diamond','assets/img/diamond.png');
 	game.load.image('Square', 'assets/img/Square.jpg');
-	
+	game.load.image('placeholder', 'assets/img/placeholder.png');
+	game.load.image('standbutton', 'assets/img/standbutton.png');
+	game.load.image('attackbutton', 'assets/img/attackbutton.png');
 }
 
-var map;
+var map; 
 
-var layer1;
-var layer2;
-var layer3;
+var layer1; 
+var layer2; 
+var layer3; 
 
 
 // movement booleans 
-var move_up = false;
-var move_down = false;
-var move_left = false;
-var move_right = false;
-
+var move_up = false; 
+var move_down = false; 
+var move_left = false; 
+var move_right = false; 
+ 
 
 var marker; // rectangular marker on the field 
 var controller; // the invisable object that controls the camera 
 var player; // the selection diamond(*diamond is placeholder )
 var ally; // ally unit 
+var hpbar;
 
 var player_turn = true;
 var mode = 0;
@@ -123,6 +126,12 @@ function create()
 	tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupied = true;
 	tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupant = ally;
 	
+	enemy = new Enemy(game,'Square',0, 512, 913, 433, 0.18);
+	game.add.existing(enemy);
+	tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupied = true;
+	tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupant = enemy;
+	
+	
 	// init player selection 
 	player = new Player(game, 'diamond', 0, 512, 392, 392, 1); // 512 is the size of the image 
 	player.alpha = 0.5;
@@ -153,10 +162,19 @@ function create()
 	// add click event 
 	game.input.onDown.add(on_click, this)
 	console.log("your turn");
+	hpbar = new HpBar(this.game, ally);
 }
 
 function update()
 {
+	if(enemy.body != null && enemy.stats.health<=0){
+		tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupied = false;
+		tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupant = null;
+		enemy.move = () => {};
+		enemy.body = null;
+		enemy.destroy();
+	}
+	
 	// find the tile index coordinate of the tile the cursor is hovering over 
 	var index_x = layer1.getTileX(game.input.activePointer.worldX);
 	var index_y = layer1.getTileY(game.input.activePointer.worldY);
@@ -188,21 +206,22 @@ function update()
 				else
 				{// otherwise hide movement area 
 					ally.bounds.alpha = 0.0;
+					enemy.bounds.alpha = 0.0;
 				}
 			break;
 			
 			case 1: // hover event when ally is selected 
-				var index_x = layer1.getTileX(game.input.activePointer.worldX);
-				var index_y = layer1.getTileY(game.input.activePointer.worldY);
-				var map_x = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
-				var map_y = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
+				
 				
 			break;
 			
 			case 2: // enemy turn
+				console.log("health " + ally.stats.health);
 				console.log("enemy_turn");
-				mode = 0;
-				console.log("your turn");
+				enemy.move(ally.x,ally.y);
+				
+				//console.log(ally.stats.health);
+				
 			break;
 		}
 	}
@@ -226,6 +245,10 @@ function on_click(pointer, event)
 					mode = 1;
 					ally.bounds.alpha = 0.5;
 				}
+				else(tile.occupant instanceof Enemy)
+				{
+					ally.bounds.alpha = 0.5;
+				}
 			}
 		break;
 		
@@ -242,6 +265,8 @@ function on_click(pointer, event)
 				var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
+				var test_arr = layer2.getTiles(game.input.activePointer.worldX,game.input.activePointer.worldY, 1, 1);
+				console.log(test_arr);
 				if(ally.map_bool[map_x][map_y])
 				{// if the area is moveable 
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
@@ -261,7 +286,37 @@ function on_click(pointer, event)
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
 								mode = 2;
 								ally.update_bounds();
-								ally.bounds.alpha = 0.0;			
+								ally.bounds.alpha = 0.0;	
+								
+								if(test_arr[0].index == -1)
+								{
+									console.log("this is not a wall lel");
+									
+									game.paused = true;
+									console.log('moved'); //here is where the menu should be called to pop up.
+						
+									if(tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
+										tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
+										tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)].occupant instanceof Enemy ||
+										tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)].occupant instanceof Enemy)
+									{
+										attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
+										attackbutton.onInputUp.add(upAttack, this);
+										attackbutton.onInputUp.add(overAttack, this);
+										mode = 2;
+									}
+									mode = 2;
+									console.log("hello2");
+									
+									standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
+									standbutton.onInputUp.add(upStand, this);
+									standbutton.onInputUp.add(overStand, this);
+									maxhpbar.x = ally.x;
+									maxhpbar.y = ally.y;
+									currentbar.x = ally.x;
+									currentbar.y = ally.y;
+									
+								}
 							}, this);
 						}
 						twn.to(
@@ -290,4 +345,120 @@ function on_click(pointer, event)
 	}
 	
 }// End on_click
+
+
+//button functions, up* functions are when the click is released, perform attack within this function.
+function upAttack() {
+	//draw(ally);
+	game.paused = false;
+    console.log('button up', arguments);
+	// attack should happen here
+	console.log('attack button pressed')
+	
+	counter = 0;
+	clickcheck(); 
+	
+	standbutton.destroy();
+	attackbutton.destroy();
+}
+
+
+function overAttack() {
+    console.log('button over');
+}
+
+
+
+function upStand() {
+    console.log('button up', arguments);
+	//stand happens here
+	
+	
+	game.paused = false;
+	//placeholder.destroy();
+	standbutton.destroy();
+	attackbutton.destroy();
+}
+function overStand() {
+    console.log('button over');
+}
+
+//need some detection to provide attack button when enemy is in range only
+
+function unpause(event)
+{
+	if(game.paused){
+		
+		var key_esc = game.input.keyboard.addKey(Phaser.Keyboard.ESC); //possibly make right click undo if we have time
+		key_esc.onDown.add(function(){
+		
+			// Remove the menu and the label
+			
+			//choiseLabel.destroy();
+			
+			// Unpause the game
+			
+		});
+	}
+}
+
+function draw(ally)
+{
+	counter = 0;
+	console.log('in draw ally');
+	//squareup = new Phaser.Rectangle(ally.x,ally.y-32,ally.x+32,ally.y);
+	//squarebot = new Phaser.Rectangle(ally.x,ally.y+32,ally.x+32,ally.y+32);
+	//squareleft = new Phaser.Rectangle(ally.x-32,ally.y,ally.x,ally.y+32);
+	//squareright = new Phaser.Rectangle(ally.x+32,ally.y,ally.x+32,ally.y+32);
+	
+	//game.debug.geom(squareup,'#EE6F6F');
+	//game.debug.geom(squarebot,'#EE6F6F');
+	//game.debug.geom(squareleft,'#EE6F6F');
+	//game.debug.geom(squareright,'#EE6F6F');
+	//really dumb way to draw four squares around characters, melee range.
+	
+	//clickcheck(); 
+}
+
+var counter = 0;
+function clickcheck()
+{
+	game.paused = true;
+	console.log("enemy health" + enemy.stats.health);
+	console.log('in click');
+
+	//ally.map[map_x-1][map_y]
+	//ally.map[map_x+1][map_y]
+	//ally.map[map_x][map_y-1]
+	//ally.map[map_x][map_y+1]
+	game.input.onDown.add(click2, this)
+
+}
+
+function click2()
+{	
+
+	var index_x = layer1.getTileX(game.input.activePointer.worldX);
+	var index_y = layer1.getTileY(game.input.activePointer.worldY);
+	var tile = tile_data[index_x][index_y];
+	var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
+	var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
+	if(tile == ally.map[map_x-1][map_y] || tile ==	ally.map[map_x+1][map_y] ||ally.map[map_x][map_y-1] || ally.map[map_x][map_y+1]){
+		console.log("hello123");
+			if(tile.occupant == enemy && counter == 0){
+				
+				//if enemy, attack
+				console.log(counter);
+				counter++;
+				enemy.stats.health = enemy.stats.health - (ally.stats.atk + enemy.stats.def);
+				
+	
+			}
+	}
+	else{console.log("not in range");
+	mode = 0;
+	}
+	
+	game.paused = false;
+}
 
