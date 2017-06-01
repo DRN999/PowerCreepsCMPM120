@@ -234,6 +234,7 @@ function on_click(pointer, event)
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
 				console.log(ally.map[map_x][map_y]);
+				
 				if(ally.map_bool[map_x][map_y])
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
@@ -245,6 +246,20 @@ function on_click(pointer, event)
 					mode = 2;
 					ally.update_bounds();
 					ally.bounds.alpha = 0.0;
+					var test_arr = layer2.getTiles(game.input.activePointer.worldX,game.input.activePointer.worldY, 1, 1);
+					console.log(test_arr);
+					if(test_arr[0].index == -1){
+						console.log("this is not a wall lel");
+						game.paused = true;
+						console.log('moved'); //here is where the menu should be called to pop up.
+						attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
+						standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
+						attackbutton.onInputUp.add(upAttack, this);
+						attackbutton.onInputUp.add(overAttack, this);
+						standbutton.onInputUp.add(upStand, this);
+						standbutton.onInputUp.add(overStand, this);
+					}
+	
 				}
 				/*
 				if(Math.abs(index_x - layer1.getTileX(ally.x)) + Math.abs(index_y - layer1.getTileY(ally.y)) < ally.stats.movement)
@@ -262,35 +277,31 @@ function on_click(pointer, event)
 				*/
 			}
 		//placeholder = game.add.sprite(game.camera.x - 20, game.camera.y + 500, 'placeholder');
-		
-		attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
-		standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
-		attackbutton.onInputUp.add(upAttack, this);
-		attackbutton.onInputUp.add(overAttack, this);
-		standbutton.onInputUp.add(upStand, this);
-		standbutton.onInputUp.add(overStand, this);
-		
-		game.paused = true;
-		console.log('moved'); //here is where the menu should be called to pop up.
+
 		break;
 		
 		case 2: break; // there should be nothing during mode 2
 			
 	}
 	
+	
+		
+	
 }// End on_click
 
 //button functions, up* functions are when the click is released, perform attack within this function.
+//need some detection to provide attack button when enemy is in range only
 function upAttack() {
     console.log('button up', arguments);
 	// attack should happen here
 	
 	
 	
-	game.paused = false;
+	
 	//placeholder.destroy();
 	standbutton.destroy();
 	attackbutton.destroy();
+	game.paused = false;
 }
 function overAttack() {
     console.log('button over');
@@ -303,16 +314,17 @@ function upStand() {
 	//stand happens here
 	
 	
-	game.paused = false;
+	
 	//placeholder.destroy();
 	standbutton.destroy();
 	attackbutton.destroy();
+	game.paused = false;
 }
 function overStand() {
     console.log('button over');
 }
 
-//need some detection to provide attack button when enemy is in range only
+
 
 function unpause(event)
 {

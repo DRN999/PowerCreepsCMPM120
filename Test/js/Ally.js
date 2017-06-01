@@ -149,7 +149,7 @@ Ally.prototype.update_map_wall = function()
 			for(var j = 0; j < this.stats.movement * 2 + 1; j++)
 				wall_arr.push({index: 100});
 	}
-	console.log(wall_arr);
+	
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
