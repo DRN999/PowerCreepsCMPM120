@@ -25,11 +25,11 @@ HpBar.prototype.constructor = HpBar;
 HpBar.prototype.change = function(character)
 {
 	//if(character.name ==ally)
-	console.log("called");
+	
 	percentage = game.math.roundTo(character.stats.health/character.stats.maxhealth,-2);
-	while(currentbar.width/maxbar.width > percentage){
+	//if(currentbar.width/maxbar.width > percentage){
 		currentbar.width = currentbar.width - 0.2;
 		game.camera.shake(0.005, 500); //the first is power of shaking, the second is the duration
 		game.camera.flash(0xff0000, 500);		//the first is the color, the second is the duration
-	}		//reduced slowly
+	//}		//reduced slowly
 }

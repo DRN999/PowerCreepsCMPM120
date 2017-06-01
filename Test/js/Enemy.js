@@ -334,6 +334,7 @@ Enemy.prototype.move = function(allyx,allyy){
 					twn.onComplete.add(() => {
 						mode = 0;
 						ally.stats.health = ally.stats.health - this.stats.atk;
+						console.log("ally_health: " + ally.stats.health);
 						hpbar.change(ally);
 						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
 						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;

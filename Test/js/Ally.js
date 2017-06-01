@@ -157,15 +157,15 @@ Ally.prototype.update_map_wall = function()
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
 		{
-			console.log(i + this.tile_coord.x() - this.stats.movement);
-			console.log(j + this.tile_coord.y() - this.stats.movement);
-			console.log(tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement]);
+			//console.log(i + this.tile_coord.x() - this.stats.movement);
+			//console.log(j + this.tile_coord.y() - this.stats.movement);
+			//console.log(tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement]);
 			if(wall_arr[i * this.map_wall.length + j].index == -1)
 				this.map_wall[i][j] = 1;
 			else if(i + this.tile_coord.x() - this.stats.movement >= 0 && j + this.tile_coord.y() - this.stats.movement >= 0 && tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement].occupant instanceof Enemy)
 			{	
-				console.log(i + this.tile_coord.x() - this.stats.movement);
-				console.log(j + this.tile_coord.y() - this.stats.movement);
+				//console.log(i + this.tile_coord.x() - this.stats.movement);
+				//console.log(j + this.tile_coord.y() - this.stats.movement);
 				this.map_wall[i][j] = 99;
 			}
 			else
