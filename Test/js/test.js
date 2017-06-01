@@ -1,13 +1,11 @@
 
 
-
 var canvas_width = 1280;
 var canvas_height = 720;
 var game = new Phaser.Game(canvas_width, canvas_height, Phaser.AUTO, 'phaser', { preload: preload, create: create, update: update });
 
-function preload() {
-
-
+function preload() 
+{
     game.load.tilemap('test', 'assets/Test1.json', null, Phaser.Tilemap.TILED_JSON);
 
     //  Next we load the tileset. This is just an image, loaded in via the normal way we load images:
@@ -131,6 +129,7 @@ function create()
 	player.movement = () => {};
 	game.add.existing(player);
 	
+	// init cursor marker 
 	marker = game.add.graphics();
     marker.lineStyle(2, 0xffffff, 1);
     marker.drawRect(0, 0, 48, 48);
@@ -161,8 +160,6 @@ function update()
 	// find the tile index coordinate of the tile the cursor is hovering over 
 	var index_x = layer1.getTileX(game.input.activePointer.worldX);
 	var index_y = layer1.getTileY(game.input.activePointer.worldY);
-	
-	
 	
 	// moves the marker and player selection 
 	marker.x = index_x * 48;
@@ -219,7 +216,8 @@ function on_click(pointer, event)
 	var index_y = layer1.getTileY(game.input.activePointer.worldY);
 	var tile = tile_data[index_x][index_y];
 	switch(mode)
-	{
+	{// mode selection onclick 
+	
 		case 0: // when nothing else is happening 
 			if(tile.occupied && event.button == 0)
 			{// select if ally is click 
@@ -231,37 +229,34 @@ function on_click(pointer, event)
 			}
 		break;
 		
-		case 1: 
+		case 1: //click when hovering 
 			if(event.button == 2)
-			{
+			{// right click 
 				mode = 0;
 				ally.bounds.alpha = 0.0;
 			}
 			else if(event.button == 0)
-			{
+			{// left click  
 				dark.clean_darkmap();
-				var map_x = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
-				var map_y = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
+				var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
+				var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
 				if(ally.map_bool[map_x][map_y])
 				{// if the area is moveable 
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
+					
 					var arr = new Array();
-					console.log(ally.dijikstra_tree);
-					console.log(map_x + " " + map_y);
-					ally.dijikstra_tree_search(map_x, map_y, ally.dijikstra_tree, arr);
-					console.log(arr);
+					ally.dijikstra_tree_search(map_y, map_x, ally.dijikstra_tree, arr);
 					var prev_twn;
 					var first_twn;
 					for(var i = 0; i < arr.length; i++)
-					{
+					{// create chained tweens
 						var twn = game.add.tween(ally);
 						if(i + 1 == arr.length)
-						{
+						{// do complete on last tween 
 							twn.onComplete.add(() => {
-								console.log("movement: " + ally.x + " " + ally.y);
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = true;
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
 								mode = 2;
@@ -270,19 +265,18 @@ function on_click(pointer, event)
 							}, this);
 						}
 						twn.to(
-						{
+						{// tween to move one block 
 							x: (ally.tile_coord.x() + (arr[i].x - ally.stats.movement)) * 48, 
 							y: (ally.tile_coord.y() + (arr[i].y - ally.stats.movement)) * 48
-						}, 500, 'Linear', false, 0);
+						}, 50, 'Linear', false, 0);
 						if(i != 0)
 							prev_twn.chain(twn);
 						else if (i == 0)
 							first_twn = twn;
-						console.log(twn);
 						prev_twn = twn;	
 					}
 					first_twn.start();
-					
+					mode = 50;
 					
 					//ally.x = index_x * 48;
 					//ally.y = index_y * 48;

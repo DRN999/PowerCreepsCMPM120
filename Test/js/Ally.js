@@ -163,6 +163,7 @@ Ally.prototype.update_map_wall = function()
 
 Ally.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
+
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
@@ -211,13 +212,14 @@ Ally.prototype.dijkstra = function()
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
-	console.log(current_node);
+	
 	this.dijikstra_tree = current_node[0][0];
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
 Ally.prototype.darkness_dijikstra = function()
-{
+{// dijikstra search for light 
+
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
@@ -260,30 +262,29 @@ Ally.prototype.darkness_dijikstra = function()
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
-	console.log("darkness_dijikstra");
-	console.log(current_node);
+	
 	return current_node;
-}
+}// End darkness_dijikstra
 
 Ally.prototype.dijikstra_tree_search = function(x, y, tree, stack)
-{
+{// search shortest path 
 	if(tree.next.length == 0)
 	{
 		if(tree.x == x && tree.y == y)
 		{
 			stack.push(tree);
-			console.log("push: " + tree.x + " " + tree.y + " end_return");
 			return true;
 		}
 		return false;
 	}
 	for(var i = 0; i < tree.next.length; i++)
 	{
-		console.log("push: " + tree.x + " " + tree.y);
 		stack.push(tree);
-		if(this.dijikstra_tree_search(x, y, tree.next[i],stack))
+		if(tree.x == x && tree.y == y)
+			return true;
+		else if(this.dijikstra_tree_search(x, y, tree.next[i], stack))
 			return true;
 		stack.pop();
 	}
 	return false;
-}
+}// End dijikstra_tree 
