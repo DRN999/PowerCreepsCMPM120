@@ -1,4 +1,4 @@
-function enemy(game, key, frame, size, p_x, p_y, scale) 
+function Enemy(game, key, frame, size, p_x, p_y, scale) 
 {
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	counter = 1;
@@ -70,10 +70,10 @@ function enemy(game, key, frame, size, p_x, p_y, scale)
 	
 }// End create 
 
-enemy.prototype = Object.create(Phaser.Sprite.prototype);
-enemy.prototype.constructor = enemy;
+Enemy.prototype = Object.create(Phaser.Sprite.prototype);
+Enemy.prototype.constructor = Enemy;
 
-enemy.prototype.update_bounds = function()
+Enemy.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	this.dijkstra();
 	this.bounds.clear();
@@ -94,13 +94,13 @@ enemy.prototype.update_bounds = function()
 	}
 }// End update_bounds 
 
-enemy.prototype.update = function()
+Enemy.prototype.update = function()
 {// update, change direction when the ship reaches the end of the screen 
 	
 	
 }// End update 
 
-enemy.prototype.get_new_map_boolean = function()
+Enemy.prototype.get_new_map_boolean = function()
 {// returns a new 17x17 array filled with boolean:false 
 	var ret = new Array();
 	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -115,7 +115,7 @@ enemy.prototype.get_new_map_boolean = function()
 	return ret;
 }// End get_new_map_boolean 
 
-enemy.prototype.update_map_wall = function()
+Enemy.prototype.update_map_wall = function()
 {
 	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
 	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
@@ -164,7 +164,7 @@ enemy.prototype.update_map_wall = function()
 	console.log(this.map_wall);
 }
 
-enemy.prototype.dijkstra = function() 
+Enemy.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
 	var map_b = this.get_new_map_boolean();
 	this.update_map_wall();
@@ -207,7 +207,7 @@ enemy.prototype.dijkstra = function()
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
-enemy.prototype.move = function(allyx,allyy){
+Enemy.prototype.move = function(allyx,allyy){
 	var allyindex_x = (layer1.getTileX(this.x) - layer1.getTileX(allyx));
 	var allyindex_y = (layer1.getTileY(this.y) - layer1.getTileY(allyy));
 	
@@ -220,7 +220,7 @@ enemy.prototype.move = function(allyx,allyy){
 			this.x = ally.x +48;
 			this.y = ally.y;
 			console.log("yes");
-			ally.stats.health = ally.stats.health - enemy.stats.atk;
+			ally.stats.health = ally.stats.health - this.stats.atk;
 			console.log(ally.stats.health);
 	}
 	else{
