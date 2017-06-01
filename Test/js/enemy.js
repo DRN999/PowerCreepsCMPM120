@@ -1,8 +1,7 @@
-
-function Ally(game, key, frame, size, p_x, p_y, scale) 
+function enemy(game, key, frame, size, p_x, p_y, scale) 
 {
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
-	
+	counter = 1;
 	this.scale.x = scale // set the scales 
 	this.scale.y = scale; 
 	game.physics.enable(this);
@@ -14,7 +13,7 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 		maxhealth:20,
 		def: 0,
 		atk: 5,
-		spd: 8
+		spd: 4
 	};
 	
 	this.map = [ // the basic map 
@@ -71,15 +70,15 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	
 }// End create 
 
-Ally.prototype = Object.create(Phaser.Sprite.prototype);
-Ally.prototype.constructor = Ally;
+enemy.prototype = Object.create(Phaser.Sprite.prototype);
+enemy.prototype.constructor = enemy;
 
-Ally.prototype.update_bounds = function()
+enemy.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	this.dijkstra();
 	this.bounds.clear();
-    this.bounds.lineStyle(2, 0x0000FF, 1);
-	this.bounds.beginFill(0x0000FF);
+    this.bounds.lineStyle(2, 0xF88383, 1);
+	this.bounds.beginFill(0xF88383);
 	for(var i = 0; i <= this.stats.movement * 2; i++)
 	{
 		for(var j = 0; j <= this.stats.movement * 2; j++)
@@ -95,13 +94,13 @@ Ally.prototype.update_bounds = function()
 	}
 }// End update_bounds 
 
-Ally.prototype.update = function()
+enemy.prototype.update = function()
 {// update, change direction when the ship reaches the end of the screen 
 	
 	
 }// End update 
 
-Ally.prototype.get_new_map_boolean = function()
+enemy.prototype.get_new_map_boolean = function()
 {// returns a new 17x17 array filled with boolean:false 
 	var ret = new Array();
 	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
@@ -116,7 +115,7 @@ Ally.prototype.get_new_map_boolean = function()
 	return ret;
 }// End get_new_map_boolean 
 
-Ally.prototype.update_map_wall = function()
+enemy.prototype.update_map_wall = function()
 {
 	var wall_arr = layer2.getTiles(this.tile_coord.x() * 48 - this.stats.movement * 48, 
 	this.tile_coord.y() * 48 - this.stats.movement * 48, (this.stats.movement * 2 + 1) * 48, (this.stats.movement * 2 + 1) * 48);
@@ -165,7 +164,7 @@ Ally.prototype.update_map_wall = function()
 	console.log(this.map_wall);
 }
 
-Ally.prototype.dijkstra = function() 
+enemy.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
 	var map_b = this.get_new_map_boolean();
 	this.update_map_wall();
@@ -208,5 +207,30 @@ Ally.prototype.dijkstra = function()
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
-
-
+enemy.prototype.move = function(allyx,allyy){
+	var allyindex_x = (layer1.getTileX(this.x) - layer1.getTileX(allyx));
+	var allyindex_y = (layer1.getTileY(this.y) - layer1.getTileY(allyy));
+	
+	console.log(allyindex_x);
+	console.log(allyindex_y);
+	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = false;
+	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = null;
+	
+	if(Math.abs(allyindex_x) <= this.stats.movement && Math.abs(allyindex_y) <= 8 && this.map_bool[8 - allyindex_y][8 - allyindex_x]){
+			this.x = ally.x +48;
+			this.y = ally.y;
+			console.log("yes");
+			ally.stats.health = ally.stats.health - enemy.stats.atk;
+			console.log(ally.stats.health);
+	}
+	else{
+			this.x = this.x-48;
+			this.y = this.y;
+			console.log("no");
+	}
+			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
+			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
+			this.update_bounds();
+			this.bounds.alpha = 0.0;
+	
+}

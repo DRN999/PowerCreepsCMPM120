@@ -28,6 +28,7 @@ function preload() {
 	game.load.image('placeholder', 'assets/img/placeholder.png');
 	game.load.image('standbutton', 'assets/img/standbutton.png');
 	game.load.image('attackbutton', 'assets/img/attackbutton.png');
+	
 }
 
 var map;
@@ -116,21 +117,12 @@ function create()
    
     // init ally
 	ally = new Ally(game, 'Square', 0, 512, 385, 385, 0.18);
-	
-	
-	enemy = new enemy(game,'Square',0, 512, 913, 433, 0.18);
-	
-	tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupied = true;
-	tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupant = enemy;
-	game.add.existing(enemy);
-	
 	game.add.existing(ally);
 	tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupied = true;
 	tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupant = ally;
 	
 	// init player selection 
-	player = new Player(game, 'diamond', 0, 512, 392, 392, 1);// 512 is the size of the image 
-	player2 = new Player(game, 'star', 0, 512, 507, 507, 1);
+	player = new Player(game, 'diamond', 0, 512, 392, 392, 1); // 512 is the size of the image 
 	player.alpha = 0.5;
 	player.movement = () => {};
 	game.add.existing(player);
@@ -158,7 +150,6 @@ function create()
 	// add click event 
 	game.input.onDown.add(on_click, this)
 	console.log("your turn");
-	hpbar = new hpbar(this.game,ally);
 }
 
 function update()
@@ -194,7 +185,6 @@ function update()
 				else
 				{// otherwise hide movement area 
 					ally.bounds.alpha = 0.0;
-					enemy.bounds.alpha = 0.0;
 				}
 			break;
 			
@@ -203,8 +193,6 @@ function update()
 			break;
 			
 			case 2: // enemy turn
-				enemy.move(ally.x,ally.y);
-				hpbar.change(ally);
 				console.log("enemy_turn");
 				mode = 0;
 				console.log("your turn");
@@ -246,43 +234,18 @@ function on_click(pointer, event)
 				console.log("mpx: " + map_x);
 				console.log("mpy: " + map_y);
 				console.log(ally.map[map_x][map_y]);
-				var test_arr = layer2.getTiles(game.input.activePointer.worldX,game.input.activePointer.worldY, 1, 1);
-				console.log(test_arr);
 				if(ally.map_bool[map_x][map_y])
 				{
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = null;
 					ally.x = index_x * 48;
 					ally.y = index_y * 48;
-					mode = 2;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = true;
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
+					mode = 2;
 					ally.update_bounds();
 					ally.bounds.alpha = 0.0;
-					if(test_arr[0].index == -1){
-						console.log("this is not a wall lel");
-						
-						game.paused = true;
-						console.log('moved'); //here is where the menu should be called to pop up.
-			
-					if(tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)] == tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)] ||
-							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)] == tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)] ||
-							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)] == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)] ||
-							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)] == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)]){
-							attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
-							attackbutton.onInputUp.add(upAttack, this);
-							attackbutton.onInputUp.add(overAttack, this);
-						}
-						standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
-						standbutton.onInputUp.add(upStand, this);
-						standbutton.onInputUp.add(overStand, this);
-						maxhpbar.x = ally.x;
-						maxhpbar.y = ally.y;
-						currentbar.x = ally.x;
-						currentbar.y = ally.y;
-					}
 				}
-				
 				/*
 				if(Math.abs(index_x - layer1.getTileX(ally.x)) + Math.abs(index_y - layer1.getTileY(ally.y)) < ally.stats.movement)
 				{
@@ -300,7 +263,15 @@ function on_click(pointer, event)
 			}
 		//placeholder = game.add.sprite(game.camera.x - 20, game.camera.y + 500, 'placeholder');
 		
-
+		attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
+		standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
+		attackbutton.onInputUp.add(upAttack, this);
+		attackbutton.onInputUp.add(overAttack, this);
+		standbutton.onInputUp.add(upStand, this);
+		standbutton.onInputUp.add(overStand, this);
+		
+		game.paused = true;
+		console.log('moved'); //here is where the menu should be called to pop up.
 		break;
 		
 		case 2: break; // there should be nothing during mode 2
@@ -313,7 +284,7 @@ function on_click(pointer, event)
 function upAttack() {
     console.log('button up', arguments);
 	// attack should happen here
-	draw(ally);
+	
 	
 	
 	game.paused = false;
@@ -336,7 +307,6 @@ function upStand() {
 	//placeholder.destroy();
 	standbutton.destroy();
 	attackbutton.destroy();
-	mode = 2;
 }
 function overStand() {
     console.log('button over');
@@ -359,49 +329,4 @@ function unpause(event)
 			
 		});
 	}
-}
-
-function draw(ally){
-	counter = 0;
-	//squareup = new Phaser.Rectangle(ally.x,ally.y-32,ally.x+32,ally.y);
-	//squarebot = new Phaser.Rectangle(ally.x,ally.y+32,ally.x+32,ally.y+32);
-	//squareleft = new Phaser.Rectangle(ally.x-32,ally.y,ally.x,ally.y+32);
-	//squareright = new Phaser.Rectangle(ally.x+32,ally.y,ally.x+32,ally.y+32);
-	
-	//game.debug.geom(squareup,'#EE6F6F');
-	//game.debug.geom(squarebot,'#EE6F6F');
-	//game.debug.geom(squareleft,'#EE6F6F');
-	//game.debug.geom(squareright,'#EE6F6F');
-	//really dumb way to draw four squares around characters, melee range.
-	
-	game.input.onDown.add(clickcheck, this); 
-}
-
-var counter = 0;
-function clickcheck(){
-	var index_x = layer1.getTileX(game.input.activePointer.worldX);
-	var index_y = layer1.getTileY(game.input.activePointer.worldY);
-	var tile = tile_data[index_x][index_y];
-	var map_y = 8 + (index_x - layer1.getTileX(ally.x));
-	var map_x = 8 + (index_y - layer1.getTileY(ally.y));
-	//ally.map[map_x-1][map_y]
-	//ally.map[map_x+1][map_y]
-	//ally.map[map_x][map_y-1]
-	//ally.map[map_x][map_y+1]
-	
-	if(tile == ally.map[map_x-1][map_y] || tile ==	ally.map[map_x+1][map_y] ||ally.map[map_x][map_y-1] || ally.map[map_x][map_y+1]){
-			if(tile.occupant == enemy && counter == 0){ //if enemy, attack
-				console.log(counter);
-				counter++;
-				enemy.stats.health = enemy.stats.health - (ally.stats.atk + enemy.stats.def);
-				console.log(enemy.stats.health);
-
-			}
-	}
-	if(enemy.stats.health<=0){
-		
-		enemy.kill();
-		enemy.body = null;
-		enemy.destroy();
-		enemy.value = null;}
 }
