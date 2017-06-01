@@ -114,6 +114,11 @@ function create()
     //  This resizes the game world to match the layer dimensions
     // layer.resizeWorld();
    
+   
+	dark = new Darkness(game, 50, 50);
+	game.add.existing(dark);
+	dark.draw_darkmap();
+	
     // init ally
 	ally = new Ally(game, 'Square', 0, 512, 385, 385, 0.18);
 	game.add.existing(ally);
@@ -146,9 +151,6 @@ function create()
 	game.add.existing(controller); 
 	game.camera.follow(controller);
 	
-	dark = new Darkness(game, 50, 50);
-	game.add.existing(dark);
-	dark.draw_darkmap();
 	// add click event 
 	game.input.onDown.add(on_click, this)
 	console.log("your turn");
@@ -233,6 +235,7 @@ function on_click(pointer, event)
 			}
 			else if(event.button == 0)
 			{
+				dark.clean_darkmap();
 				var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
 				var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
 				console.log("mpx: " + map_x);

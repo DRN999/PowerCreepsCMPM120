@@ -38,6 +38,21 @@ Ally.prototype.constructor = Ally;
 Ally.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	this.dijkstra();
+	
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+	dark.draw_darkmap();
+	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0x0000FF, 1);
 	this.bounds.beginFill(0x0000FF);
@@ -187,7 +202,54 @@ Ally.prototype.dijkstra = function()
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
-	console.log(current_node);
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
+Ally.prototype.darkness_dijikstra = function()
+{
+	var map_b = this.get_new_map_boolean(); // init boolean 
+	this.update_map_wall(); // update the wall information 
+	var current_x = this.stats.movement; // current node location x
+	var current_y = this.stats.movement; // current node location y 
+	var current_node = new Array(); // current node tree 
+	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
+	map_b[current_y][current_x] = true // init first boolean array point 
+	for(var iter = 0; iter < this.stats.movement; iter++)
+	{// iterates through the number of movements the character can make 
+		var temp = new Array(); 
+		for(var tr = 0; tr < current_node[iter].length; tr++)
+		{// iterates through the array of object, pushes the unused tiles 
+			current_x = current_node[iter][tr].x;
+			current_y = current_node[iter][tr].y;
+			
+			if(this.map_wall[current_y][current_x] == 99)
+				continue;
+			// checks each side if it was already searched, and markes them as moveable  
+			if(map_b[current_y - 1][current_x] == false)
+			{
+				temp.push({x: current_x, y: current_y - 1});
+				map_b[current_y - 1][current_x] = true;
+			}
+			if(map_b[current_y][current_x - 1] == false)
+			{
+				temp.push({x: current_x - 1, y: current_y});
+				map_b[current_y][current_x - 1] = true;
+			}
+			if(map_b[current_y + 1][current_x] == false)
+			{
+				temp.push({x: current_x, y: current_y + 1});
+				map_b[current_y + 1][current_x] = true;
+			}
+			if(map_b[current_y][current_x + 1] == false)
+			{
+				temp.push({x: current_x + 1, y: current_y});
+				map_b[current_y][current_x + 1] = true;
+			}
+		}
+		
+		current_node.push(temp);// add the collected object-array to the main array 
+	}
+	console.log("darkness_dijikstra");
+	console.log(current_node);
+	return current_node;
+}
