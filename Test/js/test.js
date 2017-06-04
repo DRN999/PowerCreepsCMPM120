@@ -18,12 +18,16 @@ var move_down = false;
 var move_left = false; 
 var move_right = false; 
  
+var player_turn;
+var enemy_turn;
 
 var marker; // rectangular marker on the field 
 var controller; // the invisable object that controls the camera 
 var player; // the selection diamond(*diamond is placeholder )
 var ally; // ally unit 
 var hpbar;
+
+var turn_start = 1;
 
 var player_turn = true;
 var mode = 0;
@@ -76,7 +80,9 @@ preload.prototype = {
 		game.load.image('Outside3', 'assets/tileset/SF_Outside_A5.png');
 		game.load.image('Outside4', 'assets/tileset/SF_Outside_B.png');
 		game.load.image('Outside5', 'assets/tileset/SF_Outside_C.png');
-
+		
+		
+		
 		// art preload
 		game.load.image('diamond','assets/img/diamond.png');
 		game.load.image('Square', 'assets/img/Square.jpg');
@@ -125,7 +131,10 @@ preload.prototype = {
 		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
 		game.load.image('testButton', 'assets/img/platform.png');
 
-
+		//turn art 
+		game.load.image('player_turn', 'assets/img/playerturn.png');
+		game.load.image('enemy_turn', 'assets/img/enemyturn.png');
+		
 		// title and ending preload
 		game.load.image('TitleBG', 'assets/img/background1b.png');
 	},
@@ -259,6 +268,8 @@ playGame.prototype = {
 		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupied = true;
 		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupant = enemy;
 		
+		player_turn = game.add.sprite(1280, 250, 'player_turn');
+		enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
 		
 		// init player selection 
 		player = new Player(game, 'diamond', 0, 512, 392, 392, 1); // 512 is the size of the image 
@@ -324,17 +335,47 @@ playGame.prototype = {
 			switch(mode)
 			{
 				case 0: // hover event when nothing else is happening 
-					if(tile.occupied)
-					{// shows the movement area if it is an ally/enemy
-						if(tile.occupant instanceof Object)
-						{
-							tile.occupant.bounds.alpha = 0.2;
-						}
+					if(turn_start == 1)
+					{
+						console.log('begin turn');
+						console.log(player_turn);
+						var twn = game.add.tween(player_turn);
+						twn.to(
+							{
+								x: 400
+							},
+							200, 'Linear', false, 0
+						);
+						var twn_2 = game.add.tween(player_turn);
+						twn_2.to(
+							{
+								x: -500
+							},
+							200, 'Linear', false, 1000
+						);
+						twn_2.onComplete.add(() => {
+							console.log("called_player");
+							player_turn.position.x = 1280;
+							turn_start = 2;
+						}, this);
+						twn.chain(twn_2);
+						twn.start();
+						turn_start = 0;
 					}
-					else
-					{// otherwise hide movement area 
-						ally.bounds.alpha = 0.0;
-						enemy.bounds.alpha = 0.0;
+					else if(turn_start == 2)
+					{
+						if(tile.occupied)
+						{// shows the movement area if it is an ally/enemy
+							if(tile.occupant instanceof Object)
+							{
+									tile.occupant.bounds.alpha = 0.2;
+							}
+						}
+						else
+						{// otherwise hide movement area 
+							ally.bounds.alpha = 0.0;
+							enemy.bounds.alpha = 0.0;
+						}
 					}
 				break;
 				
@@ -344,13 +385,43 @@ playGame.prototype = {
 				break;
 				
 				case 2: // enemy turn
-					console.log("health " + ally.stats.health);
-					console.log("enemy_turn");
-					enemy.move(ally.x,ally.y);
-					
-					//console.log(ally.stats.health);
-					
+					if(turn_start == 1)
+					{
+						console.log('begin turn');
+						var twn = game.add.tween(enemy_turn);
+						twn.to(
+							{
+								x: 400
+							},
+							200, 'Linear', false, 0
+						);
+						var twn_2 = game.add.tween(enemy_turn);
+						twn_2.to(
+							{
+								x: -500
+							},
+							200, 'Linear', false, 1000
+						);
+						twn_2.onComplete.add(() => {
+							console.log("called");
+							enemy_turn.position.x = 1280;
+							turn_start = 2;
+						}, this);
+						twn.chain(twn_2);
+						twn.start();
+						turn_start = 0;
+					}
+					else if(turn_start == 2)
+					{
+						console.log("health " + ally.stats.health);
+						console.log("enemy_turn");
+						enemy.move(ally.x,ally.y);
+						mode = 0; 
+						turn_start = 1;
+						//console.log(ally.stats.health);
+					}
 				break;
+				
 			}
 		}
 		
@@ -414,6 +485,7 @@ function on_click(pointer, event)
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = true;
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
 								mode = 2;
+								turn_start = 1;
 								ally.update_bounds();
 								ally.bounds.alpha = 0.0;	
 								
