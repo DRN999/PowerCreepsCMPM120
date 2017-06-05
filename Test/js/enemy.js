@@ -36,25 +36,7 @@ function Enemy(game, key, frame, size, p_x, p_y, scale)
 		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]	
 	];
 	
-	this.map_wall = [ // tile wall information, will be updated through tile analyzation 
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[99,99,99,99,99,99,99,99,99,99, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-	];
+	this.map_wall = this.get_new_map();
 	
 	this.map_bool = this.get_new_map_boolean();
 	
@@ -66,6 +48,7 @@ function Enemy(game, key, frame, size, p_x, p_y, scale)
 	
 	this.bounds = game.add.graphics();
 	this.update_bounds();
+	this.dijikstra_tree;
 	this.bounds.alpha = 0.0;
 	
 }// End create 
@@ -73,9 +56,39 @@ function Enemy(game, key, frame, size, p_x, p_y, scale)
 Enemy.prototype = Object.create(Phaser.Sprite.prototype);
 Enemy.prototype.constructor = Enemy;
 
+Enemy.prototype.get_new_map = function()
+{// create initial map 
+	var ret = new Array();
+	for(var i = 0; i < this.stats.movement * 2 + 1; i++)
+	{
+		var temp = new Array();
+		for(var j = 0; j < this.stats.movement * 2 + 1; j++)
+		{
+			temp.push(1);
+		}
+		ret.push(temp);
+	}
+	return ret;
+}// End get_new_map 
+
 Enemy.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
+	
 	this.dijkstra();
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+	dark.draw_darkmap();
+	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0xF88383, 1);
 	this.bounds.beginFill(0xF88383);
@@ -149,7 +162,7 @@ Enemy.prototype.update_map_wall = function()
 			for(var j = 0; j < this.stats.movement * 2 + 1; j++)
 				wall_arr.push({index: 100});
 	}
-	console.log(wall_arr);
+	
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
@@ -161,76 +174,198 @@ Enemy.prototype.update_map_wall = function()
 		}
 	}
 	
-	console.log(this.map_wall);
 }
 
 Enemy.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
-	var map_b = this.get_new_map_boolean();
-	this.update_map_wall();
+	var map_b = this.get_new_map_boolean(); // init boolean 
+	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
 	var current_y = this.stats.movement; // current node location y 
-	var current_node = new Array();
-	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
+	var current_node = new Array(); // current node tree 
+	current_node.push([{x: this.stats.movement, y: this.stats.movement, next: new Array()}]);
 	map_b[current_y][current_x] = true // init first boolean array point 
 	for(var iter = 0; iter < this.stats.movement; iter++)
 	{// iterates through the number of movements the character can make 
-		var temp = new Array();
+		var temp = new Array(); 
 		for(var tr = 0; tr < current_node[iter].length; tr++)
 		{// iterates through the array of object, pushes the unused tiles 
 			current_x = current_node[iter][tr].x;
 			current_y = current_node[iter][tr].y;
+			
+			// checks each side if it was already searched, and markes them as moveable  
 			if(this.map_wall[current_y - 1][current_x] != 99 && map_b[current_y - 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y - 1});
+				var obj = {x: current_x, y: current_y - 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y - 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x - 1] != 99 && map_b[current_y][current_x - 1] == false)
 			{
-				temp.push({x: current_x - 1, y: current_y});
+				var obj = {x: current_x - 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y][current_x - 1] = true;
 			}
 			if(this.map_wall[current_y + 1][current_x] != 99 && map_b[current_y + 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y + 1});
+				var obj = {x: current_x, y: current_y + 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y + 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x + 1] != 99 && map_b[current_y][current_x + 1] == false)
+			{
+				var obj = {x: current_x + 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
+				map_b[current_y][current_x + 1] = true;
+			}
+		}
+		
+		current_node.push(temp);// add the collected object-array to the main array 
+	}
+	
+	this.dijikstra_tree = current_node[0][0];
+	
+	this.map_bool = map_b;// convert the main boolean map to this updated one 
+}// End dijkstra 
+
+
+Enemy.prototype.darkness_dijikstra = function()
+{// dijikstra search for light 
+
+	var map_b = this.get_new_map_boolean(); // init boolean 
+	this.update_map_wall(); // update the wall information 
+	var current_x = this.stats.movement; // current node location x 
+	var current_y = this.stats.movement; // current node location y 
+	var current_node = new Array(); // current node tree 
+	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
+	map_b[current_y][current_x] = true // init first boolean array point 
+	for(var iter = 0; iter < this.stats.movement; iter++)
+	{// iterates through the number of movements the character can make 
+		var temp = new Array(); 
+		for(var tr = 0; tr < current_node[iter].length; tr++)
+		{// iterates through the array of object, pushes the unused tiles 
+			current_x = current_node[iter][tr].x;
+			current_y = current_node[iter][tr].y;
+			
+			if(this.map_wall[current_y][current_x] == 99)
+				continue;
+			
+			// checks each side if it was already searched, and markes them as moveable  
+			if(map_b[current_y - 1][current_x] == false)
+			{
+				temp.push({x: current_x, y: current_y - 1});
+				map_b[current_y - 1][current_x] = true;
+			}
+			if(map_b[current_y][current_x - 1] == false)
+			{
+				temp.push({x: current_x - 1, y: current_y});
+				map_b[current_y][current_x - 1] = true;
+			}
+			if(map_b[current_y + 1][current_x] == false)
+			{
+				temp.push({x: current_x, y: current_y + 1});
+				map_b[current_y + 1][current_x] = true;
+			}
+			if(map_b[current_y][current_x + 1] == false)
 			{
 				temp.push({x: current_x + 1, y: current_y});
 				map_b[current_y][current_x + 1] = true;
 			}
 		}
+		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
-	console.log(current_node);
-	this.map_bool = map_b;// convert the main boolean map to this updated one 
-}// End dijkstra 
+	
+	return current_node;
+}// End darkness_dijikstra
+
+Enemy.prototype.dijikstra_tree_search = function(x, y, tree, stack)
+{// search shortest path 
+	if(tree.next.length == 0)
+	{
+		if(tree.x == x && tree.y == y)
+		{
+			stack.push(tree);
+			return true;
+		}
+		return false;
+	}
+	for(var i = 0; i < tree.next.length; i++)
+	{
+		stack.push(tree);
+		if(tree.x == x && tree.y == y)
+			return true;
+		else if(this.dijikstra_tree_search(x, y, tree.next[i], stack))
+			return true;
+		stack.pop();
+	}
+	return false;
+}// End dijikstra_tree 
+
 
 Enemy.prototype.move = function(allyx,allyy){
-	var allyindex_x = (layer1.getTileX(this.x) - layer1.getTileX(allyx));
-	var allyindex_y = (layer1.getTileY(this.y) - layer1.getTileY(allyy));
+	var allyindex_x = (layer1.getTileX(allyx) - layer1.getTileX(this.x)) + this.stats.movement;
+	var allyindex_y = (layer1.getTileY(allyy) - layer1.getTileY(this.y)) + this.stats.movement;
 	
-	console.log(allyindex_x);
-	console.log(allyindex_y);
+	//console.log(allyindex_x);
+	//console.log(allyindex_y);
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = false;
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = null;
 	
-	if(Math.abs(allyindex_x) <= this.stats.movement && Math.abs(allyindex_y) <= 8 && this.map_bool[8 - allyindex_y][8 - allyindex_x]){
-			this.x = ally.x +48;
-			this.y = ally.y;
-			console.log("yes");
-			ally.stats.health = ally.stats.health - this.stats.atk;
-			console.log(ally.stats.health);
+	if(this.map_bool[allyindex_y][allyindex_x])
+	{
+			var arr = new Array();
+			//console.log(this.dijikstra_tree);
+			this.dijikstra_tree_search(allyindex_x, allyindex_y, this.dijikstra_tree, arr);
+			if(arr.length > 0)
+				arr.pop();
+			//console.log(arr);
+			var prev_twn;
+			var first_twn;
+			for(var i = 0; i < arr.length; i++)
+			{// create chained tweens
+				var twn = game.add.tween(this);
+				if(i + 1 == arr.length)
+				{
+					twn.onComplete.add(() => {
+						mode = 0;
+						ally.stats.health = ally.stats.health - this.stats.atk;
+						//console.log("ally_health: " + ally.stats.health);
+						hpbar.change(ally);
+						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
+						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
+						this.update_bounds();
+						this.bounds.alpha = 0.0;
+					}, this);
+				}
+				twn.to(
+				{// tween to move one block 
+					x: (this.tile_coord.x() + (arr[i].x - this.stats.movement)) * 48, 
+					y: (this.tile_coord.y() + (arr[i].y - this.stats.movement)) * 48
+				}, 50, 'Linear', false, 0);
+				if(i != 0)
+					prev_twn.chain(twn);
+				else if (i == 0)
+					first_twn = twn;
+				prev_twn = twn;	
+			}
+			first_twn.start();
+			mode = 50;
+			
 	}
 	else{
 			this.x = this.x-48;
 			this.y = this.y;
-			console.log("no");
-	}
+			//console.log("no");
 			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
 			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
 			this.update_bounds();
 			this.bounds.alpha = 0.0;
+	}
+	
 	
 }
