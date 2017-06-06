@@ -122,7 +122,7 @@ titleScreen.prototype = {
 		// splash background
 		game.add.sprite(0, 0, 'TitleBG');
 		// title
-		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'Escaping Core', 120);
+		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'The Core', 120);
 		titleText.anchor.set(0.5);
 		// clickable buttons
 		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'testButton', this.startIntro);
@@ -226,6 +226,8 @@ howToPlay.prototype = {
 	}
 }
 
+var endTile;
+
 var playGame = function(game){};
 playGame.prototype = {
 	init: function() {
@@ -266,6 +268,7 @@ playGame.prototype = {
 			if (tileArr[i].index != -1) {
 				tile_data[tileArr[i].x][tileArr[i].y].occupied = true;
 				tile_data[tileArr[i].x][tileArr[i].y].occupant = 'wall';
+				// console.log(tileArr[i].x + ', ' + tileArr[i].y);
 			}
 		}
 
@@ -310,6 +313,10 @@ playGame.prototype = {
 		// add click event 
 		game.input.onDown.add(on_click, this)
 		console.log("your turn");
+
+
+		endTile = tile_data[44][2]; // ladder in facility, behind green laser gate
+		console.log(endTile);
 	}, // end create
 	update: function() {
 
@@ -360,6 +367,12 @@ playGame.prototype = {
 				break;
 			}
 		}
+
+		if (endTile.occupant == ally) {
+			game.state.start('GameOverScreen');
+		}
+
+		// if player reaches certain tile, go to gameover state
 
 	} // end update
 }
