@@ -45,16 +45,18 @@ Darkness.prototype.add_coord = function(x, y, alpha)
 
 Darkness.prototype.draw_darkmap = function()
 {// re_draws the darkmap 
+	console.log(this);
 	this.clear();
 	for(var i = 0; i < this.dark_map.length; i++)
 	{
 		for(var j = 0; j < this.dark_map[i].length; j++)
 		{
+			
 			this.beginFill(0x000000, 1.0 - this.dark_map[i][j]);
-			this.drawRect(j * 48, i * 48, 48, 48)
+			this.drawRect(j * 48, i * 48, 48, 48);
+			this.endFill();
 			
 		}	
 	}
 }// End draw_darkmap 
-
 

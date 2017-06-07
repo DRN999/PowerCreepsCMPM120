@@ -25,7 +25,11 @@ var marker; // rectangular marker on the field
 var controller; // the invisable object that controls the camera 
 var player; // the selection diamond(*diamond is placeholder )
 var ally; // ally unit 
+var enemy;
 var hpbar;
+var attackbutton;
+var standbutton;
+
 
 var turn_start = 1;
 
@@ -137,6 +141,9 @@ preload.prototype = {
 		
 		// title and ending preload
 		game.load.image('TitleBG', 'assets/img/background1b.png');
+		
+		game.load.spritesheet('character', 'assets/img/vx_chara01_a.png', 32, 48, 12);
+		
 	},
 	
 	create: function() {
@@ -246,9 +253,7 @@ playGame.prototype = {
 		layer1 = map.createLayer('Decoration 1');
 		layer2 = map.createLayer('Decoration 2');
 		layer3 = map.createLayer('Decoration 3');
-		var test_array = layer2.getTiles(0, 48 * 5, 48 * 12, 1);
-		for(var i = 0; i < test_array.length; i++)
-			console.log(test_array[i].index == -1 ? false : true);
+
 		//  This resizes the game world to match the layer dimensions
 		// layer.resizeWorld();
 	   
@@ -257,19 +262,30 @@ playGame.prototype = {
 		game.add.existing(dark);
 		dark.draw_darkmap();
 		
+		
+		
 		// init ally
-		ally = new Ally(game, 'Square', 0, 512, 385, 385, 0.18);
+		ally = new Ally(game, 'character', 0, 512, 385, 385, 1.5, 1);
 		game.add.existing(ally);
 		tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupied = true;
 		tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupant = ally;
+		hpbar = new HpBar(this.game, ally);
+		game.add.existing(hpbar);
+		ally.addChild(hpbar);
+		ally.death_event = () => {
+			game.state.start('GameOverScreen');
+		};
+		hpbar.redraw();
 		
-		enemy = new Enemy(game,'Square',0, 512, 913, 433, 0.18);
+		enemy = new Enemy(game,'character', 9, 512, 913, 433, 1.5, 1);
 		game.add.existing(enemy);
 		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupied = true;
 		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupant = enemy;
+		var hpbar_1 = new HpBar(this.game, enemy);
+		game.add.existing(hpbar_1);
+		enemy.addChild(hpbar_1);
+		hpbar_1.redraw();
 		
-		player_turn = game.add.sprite(1280, 250, 'player_turn');
-		enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
 		
 		// init player selection 
 		player = new Player(game, 'diamond', 0, 512, 392, 392, 1); // 512 is the size of the image 
@@ -301,7 +317,12 @@ playGame.prototype = {
 		// add click event 
 		game.input.onDown.add(on_click, this)
 		console.log("your turn");
-		hpbar = new HpBar(this.game, ally);
+		
+		
+		player_turn = game.add.sprite(1280, 250, 'player_turn');
+		player_turn.alpha = 0;
+		enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
+		enemy_turn.alpha = 0;
 	},
 
 	update: function()
@@ -337,25 +358,28 @@ playGame.prototype = {
 				case 0: // hover event when nothing else is happening 
 					if(turn_start == 1)
 					{
-						console.log('begin turn');
-						console.log(player_turn);
+						darkmap_redraw();
+						ally.update_bounds();
+						enemy.update_bounds();
+						player_turn.alpha = 1;
+						player_turn.position.x = game.camera.x + 1280;
+						player_turn.position.y = game.camera.y + 250;
 						var twn = game.add.tween(player_turn);
 						twn.to(
 							{
-								x: 400
+								x: game.camera.x + 400
 							},
 							200, 'Linear', false, 0
 						);
 						var twn_2 = game.add.tween(player_turn);
 						twn_2.to(
 							{
-								x: -500
+								x: game.camera.x - 500
 							},
 							200, 'Linear', false, 1000
 						);
 						twn_2.onComplete.add(() => {
-							console.log("called_player");
-							player_turn.position.x = 1280;
+							player_turn.alpha = 0;
 							turn_start = 2;
 						}, this);
 						twn.chain(twn_2);
@@ -387,24 +411,30 @@ playGame.prototype = {
 				case 2: // enemy turn
 					if(turn_start == 1)
 					{
-						console.log('begin turn');
+						darkmap_redraw();
+						ally.update_bounds();
+						enemy.update_bounds();
+						//console.log('begin turn');
+						enemy_turn.alpha = 1;
+						enemy_turn.position.x = game.camera.x + 1280;
+						enemy_turn.position.y = game.camera.y + 250;
 						var twn = game.add.tween(enemy_turn);
 						twn.to(
 							{
-								x: 400
+								x: game.camera.x + 400
 							},
 							200, 'Linear', false, 0
 						);
 						var twn_2 = game.add.tween(enemy_turn);
 						twn_2.to(
 							{
-								x: -500
+								x: game.camera.x - 500
 							},
 							200, 'Linear', false, 1000
 						);
 						twn_2.onComplete.add(() => {
-							console.log("called");
-							enemy_turn.position.x = 1280;
+							//console.log("called");
+							enemy_turn.alpha = 0;
 							turn_start = 2;
 						}, this);
 						twn.chain(twn_2);
@@ -413,11 +443,10 @@ playGame.prototype = {
 					}
 					else if(turn_start == 2)
 					{
-						console.log("health " + ally.stats.health);
-						console.log("enemy_turn");
+						//console.log("health " + ally.stats.health);
+						//console.log("enemy_turn");
 						enemy.move(ally.x,ally.y);
-						mode = 0; 
-						turn_start = 1;
+						
 						//console.log(ally.stats.health);
 					}
 				break;
@@ -463,10 +492,9 @@ function on_click(pointer, event)
 				dark.clean_darkmap();
 				var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
 				var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
-				console.log("mpx: " + map_x);
-				console.log("mpy: " + map_y);
+				
 				var test_arr = layer2.getTiles(game.input.activePointer.worldX,game.input.activePointer.worldY, 1, 1);
-				console.log(test_arr);
+				
 				if(ally.map_bool[map_x][map_y])
 				{// if the area is moveable 
 					tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupied = false;
@@ -486,15 +514,14 @@ function on_click(pointer, event)
 								tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y)].occupant = ally;
 								mode = 2;
 								turn_start = 1;
-								ally.update_bounds();
+								darkmap_redraw();
 								ally.bounds.alpha = 0.0;	
-								
 								if(test_arr[0].index == -1)
 								{
-									console.log("this is not a wall lel");
+								
 									
 									game.paused = true;
-									console.log('moved'); //here is where the menu should be called to pop up.
+									//here is where the menu should be called to pop up.
 						
 									if(tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
 										tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
@@ -507,17 +534,23 @@ function on_click(pointer, event)
 										mode = 2;
 									}
 									mode = 2;
-									console.log("hello2");
+									//console.log("hello2");
 									
 									standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
 									standbutton.onInputUp.add(upStand, this);
 									standbutton.onInputUp.add(overStand, this);
-									maxhpbar.x = ally.x;
-									maxhpbar.y = ally.y;
-									currentbar.x = ally.x;
-									currentbar.y = ally.y;
+									//maxhpbar.x = ally.x;
+									//maxhpbar.y = ally.y;
+									//currentbar.x = ally.x;
+									//currentbar.y = ally.y;
 									
 								}
+							}, this);
+						}
+						else
+						{
+							twn.onComplete.add(() => {
+								//darkmap_redraw();
 							}, this);
 						}
 						twn.to(
@@ -545,11 +578,24 @@ function on_click(pointer, event)
 			
 	}
 	
+	
+	
 }// End on_click
 
+function darkmap_redraw()
+{
+	dark.clean_darkmap();
+	ally.update_darkness(dark);
+	enemy.update_darkness(dark);
+	dark.draw_darkmap();
+}
+	
 var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
-
+	create: function()
+	{
+		console.log('u suk lel');
+	}
 }
 
 //button functions, up* functions are when the click is released, perform attack within this function.
@@ -564,7 +610,8 @@ function upAttack() {
 	clickcheck(); 
 	
 	standbutton.destroy();
-	attackbutton.destroy();
+	if(attack_button != null)
+		attackbutton.destroy();
 }
 
 
@@ -575,17 +622,19 @@ function overAttack() {
 
 
 function upStand() {
-    console.log('button up', arguments);
+   // console.log('button up', arguments);
 	//stand happens here
 	
 	
 	game.paused = false;
 	//placeholder.destroy();
+	
 	standbutton.destroy();
-	attackbutton.destroy();
+	if(attackbutton != null)
+		attackbutton.destroy();
 }
 function overStand() {
-    console.log('button over');
+    //console.log('button over');
 }
 
 //need some detection to provide attack button when enemy is in range only

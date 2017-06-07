@@ -1,9 +1,9 @@
-function Enemy(game, key, frame, size, p_x, p_y, scale) 
+function Enemy(game, key, frame, size, p_x, p_y, scalex, scaley) 
 {
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	counter = 1;
-	this.scale.x = scale // set the scales 
-	this.scale.y = scale; 
+	this.scale.x = scalex; // set the scales 
+	this.scale.y = scaley; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
@@ -75,20 +75,6 @@ Enemy.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	
 	this.dijkstra();
-	var tree = this.darkness_dijikstra();
-	for( var i = 0; i < tree.length; i++)
-	{
-		for(var j = 0; j < tree[i].length; j++)
-		{
-			var change_x = tree[i][j].x - this.stats.movement;
-			var change_y = tree[i][j].y - this.stats.movement;
-			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
-			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
-				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
-		}
-	}
-	dark.draw_darkmap();
-	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0xF88383, 1);
 	this.bounds.beginFill(0xF88383);
@@ -106,6 +92,23 @@ Enemy.prototype.update_bounds = function()
 		}
 	}
 }// End update_bounds 
+
+Enemy.prototype.update_darkness = function(dark)
+{// updates the tile light 
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+}// End update_darkness
+
 
 Enemy.prototype.update = function()
 {// update, change direction when the ship reaches the end of the screen 
@@ -311,19 +314,18 @@ Enemy.prototype.move = function(allyx,allyy){
 	var allyindex_x = (layer1.getTileX(allyx) - layer1.getTileX(this.x)) + this.stats.movement;
 	var allyindex_y = (layer1.getTileY(allyy) - layer1.getTileY(this.y)) + this.stats.movement;
 	
-	console.log(allyindex_x);
-	console.log(allyindex_y);
+	
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = false;
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = null;
 	
 	if(this.map_bool[allyindex_y][allyindex_x])
 	{
 			var arr = new Array();
-			console.log(this.dijikstra_tree);
+			//console.log(this.dijikstra_tree);
 			this.dijikstra_tree_search(allyindex_x, allyindex_y, this.dijikstra_tree, arr);
 			if(arr.length > 0)
 				arr.pop();
-			console.log(arr);
+			//console.log(arr);
 			var prev_twn;
 			var first_twn;
 			for(var i = 0; i < arr.length; i++)
@@ -333,13 +335,22 @@ Enemy.prototype.move = function(allyx,allyy){
 				{
 					twn.onComplete.add(() => {
 						mode = 0;
-						ally.stats.health = ally.stats.health - this.stats.atk;
-						console.log("ally_health: " + ally.stats.health);
-						hpbar.change(ally);
+						ally.stats.health -= this.stats.atk;
+						if(ally.stats.health == 0)
+							ally.death_event();
+						ally.children[0].change();
 						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
 						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
-						this.update_bounds();
+						//this.update_bounds();
 						this.bounds.alpha = 0.0;
+						mode = 0; 
+						turn_start = 1;
+					}, this);
+				}
+				else
+				{
+					twn.onComplete.add(() => {
+						//darkmap_redraw();
 					}, this);
 				}
 				twn.to(
@@ -360,7 +371,7 @@ Enemy.prototype.move = function(allyx,allyy){
 	else{
 			this.x = this.x-48;
 			this.y = this.y;
-			console.log("no");
+			//console.log("no");
 			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
 			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
 			this.update_bounds();
