@@ -100,7 +100,9 @@ preload.prototype = {
 		// UI/text preload
 		this.load.bitmapFont('MainFont', 'assets/font/font.png', 'assets/font/font.fnt');
 		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
-		game.load.image('testButton', 'assets/img/platform.png');
+		// game.load.image('testButton', 'assets/img/platform.png');
+		game.load.image('playButton', 'assets/img/play.png');
+		game.load.image('restartButton', 'assets/img/restart.png');
 		game.load.image('dayButton', 'assets/img/dayButton.png');
 		game.load.image('nightButton', 'assets/img/nightButton.png');
 
@@ -125,7 +127,7 @@ titleScreen.prototype = {
 		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'The Core', 120);
 		titleText.anchor.set(0.5);
 		// clickable buttons
-		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'testButton', this.startIntro);
+		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'playButton', this.startIntro);
 		startButton.anchor.set(0.5);
 	},
 	startIntro: function(){
@@ -387,7 +389,7 @@ gameOverScreen.prototype = {
 		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'Game Over', 120);
 		titleText.anchor.set(0.5);
 		// clickable buttons
-		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'testButton', this.restart);
+		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'restartButton', this.restart);
 		startButton.anchor.set(0.5);
 	},
 	restart: function(){
