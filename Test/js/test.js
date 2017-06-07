@@ -381,6 +381,17 @@ var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
 	create: function() {
 		console.log('game over');
+		// splash background
+		game.add.sprite(0, 0, 'TitleBG');
+		// title
+		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'Game Over', 120);
+		titleText.anchor.set(0.5);
+		// clickable buttons
+		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'testButton', this.restart);
+		startButton.anchor.set(0.5);
+	},
+	restart: function(){
+		game.state.start('TitleScreen');
 	}
 }
 
