@@ -123,13 +123,37 @@ preload.prototype = {
 		this.load.bitmapFont('MainFont', 'assets/font/font.png', 'assets/font/font.fnt');
 		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
 		game.load.image('testButton', 'assets/img/platform.png');
-
-
+		game.load.audio('click1','assets/audio/SE/click1.wav');
+		game.load.audio('click2','assets/audio/SE/click2.wav');
+		game.load.audio('hit1','assets/audio/SE/hit1.wav');
+		game.load.audio('sword1','assets/audio/SE/sword1.wav');
+		game.load.audio('sword2','assets/audio/SE/sword2.wav');
+		game.load.audio('sword3','assets/audio/SE/sword3.wav');
+		game.load.audio('sword4','assets/audio/SE/sword4.wav');
+		game.load.audio('walk1','assets/audio/SE/walk1.mp3');
+		game.load.audio('BM1','assets/audio/music/BM1.wav');
+		game.load.audio('BM2','assets/audio/music/BM2.mp3');
 		// title and ending preload
 		game.load.image('TitleBG', 'assets/img/background1b.png');
 	},
 	
 	create: function() {
+		click1 = game.add.audio('click1');
+		click2 = game.add.audio('click2');
+		hit1 = game.add.audio('hit1');
+		sword1 = game.add.audio('sword1');
+		sword2 = game.add.audio('sword2');
+		sword3 = game.add.audio('sword3');
+		sword4 = game.add.audio('sword4');
+		walk1 = game.add.audio('walk1');
+		BM1 = game.add.audio('BM1');
+		BM2 = game.add.audio('BM2');
+		BM1.loop = true;
+		BM1.volume = 0.2;
+		BM2.loop = true;
+		BM2.volume = 0.2;
+		Sounds = [sword1,sword2,sword3,sword4,hit1];
+		
 		// preload the 9patch box
 		//game.cache.addNinePatch('blue_button02', 'blueSheet', 'blue_button02.png', 10, 10, 10, 20);
 		// move to title screen
@@ -140,6 +164,7 @@ var titleScreen = function(game){};
 titleScreen.prototype = {
 	create: function() {
 		// add splash background
+		BM1.play();
 		game.add.sprite(0, 0, 'TitleBG');
 		// title
 		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'Escaping Core', 150);
@@ -151,6 +176,7 @@ titleScreen.prototype = {
 	},
 	startIntro: function(){
 		game.state.start('IntroScreen');
+		click2.play();
 	}
 }
 
@@ -177,6 +203,7 @@ introScreen.prototype = {
 	startGame: function() {
 		// pass flags as parameters from intro to game based on player choice
 		game.state.start('PlayGame');
+		click2.play();
 	}
 }
 
@@ -210,7 +237,8 @@ playGame.prototype = {
 
 	create: function() 
 	{ // 
-		
+		BM1.stop();
+		BM2.play();
 		game.world.setBounds(0, 0, 2400, 2400);
 		game.canvas.oncontextmenu = function (e) { e.preventDefault(); } // negate right click menu 
 		game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -438,7 +466,6 @@ function on_click(pointer, event)
 									{
 										attackbutton.visible = true;
 									}
-							
 									//attackbutton.destroy();
 									console.log("hellllllllllllllllllllllllllllo");
 
@@ -453,6 +480,7 @@ function on_click(pointer, event)
 								}
 							}, this);
 						}
+						twn.onComplete.add(walksound,this);
 						twn.to(
 						{// tween to move one block 
 							x: (ally.tile_coord.x() + (arr[i].x - ally.stats.movement)) * 48, 
@@ -487,6 +515,7 @@ gameOverScreen.prototype = {
 
 //button functions, up* functions are when the click is released, perform attack within this function.
 function upAttack() {
+	click2.play();
 	var graphics = game.add.graphics();
 	graphics.beginFill(0xF88383, 0.5);
     graphics.lineStyle(2, 0x0000FF, 0.5);
@@ -509,6 +538,7 @@ function upAttack() {
 }
 
 function clickclick(){
+	click2.play();
 	var mouseindex_x = layer1.getTileX(game.input.activePointer.worldX);
 	var mouseindex_y = layer1.getTileY(game.input.activePointer.worldY);
 	var tile2 = tile_data[mouseindex_x][mouseindex_y];
@@ -531,6 +561,7 @@ function clickclick(){
 
 
 function upStand() {
+	click2.play();
     console.log('stand button press');
 	//stand happens here
 	
@@ -543,4 +574,9 @@ function upStand() {
 	
 }
 
+function walksound(){
+	if(walk1.isplaying){}
+	else{walk1.play();
+	console.log("sound here");}
+}
 
