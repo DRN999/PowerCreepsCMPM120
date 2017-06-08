@@ -164,6 +164,7 @@ var titleScreen = function(game){};
 titleScreen.prototype = {
 	create: function() {
 		// add splash background
+		BM2.stop();
 		BM1.play();
 		game.add.sprite(0, 0, 'TitleBG');
 		// title
@@ -377,6 +378,7 @@ playGame.prototype = {
 					hpbar.change(ally);
 					//console.log(ally.stats.health);
 					//console.log(enemy.stats.health);
+					if(ally.stats.health ==0){game.state.start('GameOverScreen');}
 					mode = 0;
 				break;
 			}
@@ -510,7 +512,16 @@ function on_click(pointer, event)
 
 var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
-
+	create:function(){
+		game.stage.backgroundColor = '#FFFFFF';
+		game.add.text(200, 200, 'Press Enter to restart the game', {} );
+		enterkey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+		enterkey.onDown.addOnce(this.restart,this);
+	},
+	restart:function(){
+		game.state.start('TitleScreen');
+		click2.play();
+	}
 }
 
 //button functions, up* functions are when the click is released, perform attack within this function.
