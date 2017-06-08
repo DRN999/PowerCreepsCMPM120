@@ -166,7 +166,7 @@ Enemy.prototype.update_map_wall = function()
 				wall_arr.push({index: 100});
 	}
 	
-	console.log('start_loop');
+	
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
@@ -351,7 +351,6 @@ Enemy.prototype.move = function(last, prev)
 				if(i + 1 == arr.length && last)
 				{
 					twn.onComplete.add(() => {
-						console.log('modechange');
 						mode = 0;
 						ally.stats.health -= this.stats.atk;
 						if(ally.stats.health == 0)
