@@ -26,8 +26,8 @@ var controller; // the invisable object that controls the camera
 var player; // the selection diamond(*diamond is placeholder )
 var ally; // ally unit 
 var enemy;
-var allies;
-var enemies;
+var allies = new Array();
+var enemies = new Array();
 var hpbar;
 var attackbutton;
 var standbutton;
@@ -74,49 +74,6 @@ boot.prototype = {
 		this.game.state.start('Preload');
 	}
 }
-
-/*
-
-var preload = function(game) {};
-preload.prototype = {
-	preload: function() {
-		// tilemap preload
-		game.load.tilemap('test', 'assets/Test1.json', null, Phaser.Tilemap.TILED_JSON);
-	    game.load.image('Inside1', 'assets/tileset/Inside_A5.png');
-		game.load.image('Inside2', 'assets/tileset/Inside_B.png');
-		game.load.image('Inside3', 'assets/tileset/Inside_C.png');
-		game.load.image('Outside1', 'assets/tileset/Outside_A2.png');
-		game.load.image('Outside2', 'assets/tileset/Outside_B.png');
-		game.load.image('Inside4', 'assets/tileset/SF_Inside_A4.png');
-		game.load.image('Inside5', 'assets/tileset/SF_Inside_B.png');
-		game.load.image('Inside6', 'assets/tileset/SF_Inside_C.png');
-		game.load.image('Outside3', 'assets/tileset/SF_Outside_A5.png');
-		game.load.image('Outside4', 'assets/tileset/SF_Outside_B.png');
-		game.load.image('Outside5', 'assets/tileset/SF_Outside_C.png');
-		
-		
-		
-		// art preload
-		game.load.image('diamond','assets/img/diamond.png');
-		game.load.image('Square', 'assets/img/Square.jpg');
-
-		// UI/text preload
-		this.load.bitmapFont('MainFont', 'assets/font/font.png', 'assets/font/font.fnt');
-		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
-		game.load.image('testButton', 'assets/img/platform.png');
-
-
-		// title and ending preload
-		game.load.image('TitleBG', 'assets/img/background1b.png');
-	},
-	create: function() {
-		// preload the 9patch box
-		//game.cache.addNinePatch('blue_button02', 'blueSheet', 'blue_button02.png', 10, 10, 10, 20);
-		// move to title screen
-		this.game.state.start('TitleScreen');
-	}
-}// End preload 
-*/
 
 var preload = function(game) {};
 preload.prototype = {
@@ -186,14 +143,6 @@ titleScreen.prototype = {
 var introScreen = function(game){};
 introScreen.prototype = {
 	create: function() {
-		/*
-		// dialogue box test
-		var dialogueBox = new Phaser.NinePatchImage(game, canvas_width / 2, 100, 'blue_button02');
-		dialogueBox.anchor.set(0.5);
-		dialogueBox.targetWidth = 900;
-		dialogueBox.targetHeight = 100;
-		dialogueBox.UpdateImageSizes();
-		*/
 		
 		// narrative introduction
 		narrativeText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'This is a story all about how my life got flipped - turned upside down\n' + 'Now I\'d like to take a minute, just sit right there\n' + 'I\'ll tell you how I became prince of a town called Bel-Air', 30);
@@ -285,10 +234,10 @@ playGame.prototype = {
 		
 		
 		// init ally
-		ally = new Ally(game, 'character', 0, 512, 385, 385, 1.5, 1);
+		ally = new Ally(game, 'character', 0, 512, 384, 384, 1.5, 1);
 		game.add.existing(ally);
-		tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupied = true;
-		tile_data[layer1.getTileX(385)][layer1.getTileY(385)].occupant = ally;
+		tile_data[layer1.getTileX(384)][layer1.getTileY(384)].occupied = true;
+		tile_data[layer1.getTileX(384)][layer1.getTileY(384)].occupant = ally;
 		hpbar = new HpBar(this.game, ally);
 		game.add.existing(hpbar);
 		ally.addChild(hpbar);
@@ -296,15 +245,29 @@ playGame.prototype = {
 			game.state.start('GameOverScreen');
 		};
 		hpbar.redraw();
+		allies.push(ally);
 		
-		enemy = new Enemy(game,'character', 9, 512, 913, 433, 1.5, 1);
+		enemy = new Enemy(game,'character', 9, 512, 912, 432, 1.5, 1);
+		enemy.id = 0;
 		game.add.existing(enemy);
-		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupied = true;
-		tile_data[layer1.getTileX(913)][layer1.getTileY(433)].occupant = enemy;
+		tile_data[layer1.getTileX(912)][layer1.getTileY(432)].occupied = true;
+		tile_data[layer1.getTileX(912)][layer1.getTileY(432)].occupant = enemy;
 		var hpbar_1 = new HpBar(this.game, enemy);
 		game.add.existing(hpbar_1);
 		enemy.addChild(hpbar_1);
 		hpbar_1.redraw();
+		enemies.push(enemy);
+		
+		var enemy2 = new Enemy(game,'character', 9, 512, 1152, 432, 1.5, 1);
+		enemy2.id = 1;
+		game.add.existing(enemy2);
+		tile_data[layer1.getTileX(1152)][layer1.getTileY(432)].occupied = true;
+		tile_data[layer1.getTileX(1152)][layer1.getTileY(432)].occupant = enemy2;
+		var hpbar_1 = new HpBar(this.game, enemy2);
+		game.add.existing(hpbar_1);
+		enemy2.addChild(hpbar_1);
+		hpbar_1.redraw();
+		enemies.push(enemy2);
 		
 		
 		// init player selection 
@@ -356,6 +319,7 @@ playGame.prototype = {
 		
 		player_turn = game.add.sprite(1280, 250, 'player_turn');
 		player_turn.alpha = 0;
+		
 		enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
 		enemy_turn.alpha = 0;
 		
@@ -402,9 +366,17 @@ playGame.prototype = {
 				case 0: // hover event when nothing else is happening 
 					if(turn_start == 1)
 					{
+						console.log('player_turn');
 						darkmap_redraw();
-						ally.update_bounds();
-						enemy.update_bounds();
+						
+						allies.forEach((obj) => {
+							obj.update_bounds();
+						}, this);
+						enemies.forEach((obj) => {
+							obj.update_bounds();
+						}, this);
+						//ally.update_bounds();
+						//enemy.update_bounds();
 						player_turn.alpha = 1;
 						player_turn.position.x = game.camera.x + 1280;
 						player_turn.position.y = game.camera.y + 250;
@@ -441,8 +413,12 @@ playGame.prototype = {
 						}
 						else
 						{// otherwise hide movement area 
-							ally.bounds.alpha = 0.0;
-							enemy.bounds.alpha = 0.0;
+							allies.forEach((obj) => {
+								obj.bounds.alpha = 0.0;
+							}, this);
+							enemies.forEach((obj) => {
+								obj.bounds.alpha = 0.0;
+							}, this);
 						}
 					}
 				break;
@@ -455,9 +431,15 @@ playGame.prototype = {
 				case 2: // enemy turn
 					if(turn_start == 1)
 					{
+						turn_start = 0;
+						console.log('enemy_turn');
 						darkmap_redraw();
-						ally.update_bounds();
-						enemy.update_bounds();
+						allies.forEach((obj) => {
+							obj.update_bounds();
+						}, this);
+						enemies.forEach((obj) => {
+							obj.update_bounds();
+						}, this);
 						//console.log('begin turn');
 						enemy_turn.alpha = 1;
 						enemy_turn.position.x = game.camera.x + 1280;
@@ -483,15 +465,42 @@ playGame.prototype = {
 						}, this);
 						twn.chain(twn_2);
 						twn.start();
-						turn_start = 0;
+						
+						
 					}
 					else if(turn_start == 2)
 					{
 						//console.log("health " + ally.stats.health);
 						//console.log("enemy_turn");
-						enemy.move(ally.x,ally.y);
-						mode = 0;
-						turn_start = 1;
+						turn_start = 50;
+						if(enemies.length == 0)
+						{
+							mode = 0;
+							turn_start = 1;
+						}
+						else
+						{
+							var twn;
+							var first_twn;
+							for(var i = 0; i < enemies.length; i++)
+							{
+								if(i == 0)
+								{
+									twn = game.add.tween(enemies[i]);
+									twn.to({x: enemies[i].x, y: enemies[i].y}, 50, 'Linear', false, 0);
+									first_twn = twn;
+									twn = enemies[i].move(false, twn);
+								}
+								else if(i + 1 == enemies.length)
+									twn = enemies[i].move(true, twn);
+								else
+								{
+									twn = enemies[i].move(false, twn);
+								}
+							}
+							console.log(first_twn);
+							first_twn.start();
+						}
 						//console.log(ally.stats.health);
 					}
 				break;
@@ -538,12 +547,13 @@ function on_click(pointer, event)
 			{// select if ally is click 
 				if(tile.occupant instanceof Ally)
 				{
+					ally = tile.occupant;
 					mode = 1;
-					ally.bounds.alpha = 0.5;
+					tile.occupant.bounds.alpha = 0.5;
 				}
 				else(tile.occupant instanceof Enemy)
 				{
-					ally.bounds.alpha = 0.5;
+					tile.occupant.bounds.alpha = 0.5;
 				}
 			}
 		break;
@@ -552,7 +562,7 @@ function on_click(pointer, event)
 			if(event.button == 2)
 			{// right click 
 				mode = 0;
-				ally.bounds.alpha = 0.0;
+				tile.occupant.bounds.alpha = 0.0;
 			}
 			else if(event.button == 0)
 			{// left click  
@@ -586,9 +596,7 @@ function on_click(pointer, event)
 								standbutton.visible = true;
 								
 								if(test_arr[0].index == -1)
-								{
-								
-									
+								{	
 									//game.paused = true;
 									//here is where the menu should be called to pop up.
 									
@@ -651,17 +659,31 @@ function on_click(pointer, event)
 					if(tile2.occupant instanceof Enemy)
 					{
 						//if enemy, attack
-						enemy.stats.health = enemy.stats.health - (ally.stats.atk - enemy.stats.def);
-						enemy.children[0].change();
-						if(enemy.body != null && enemy.stats.health<=0)
+						tile2.occupant.stats.health = tile2.occupant.stats.health - (ally.stats.atk - tile2.occupant.stats.def);
+						tile2.occupant.children[0].change();
+						console.log(tile2.occupant);
+						if(tile2.occupant != null && tile2.occupant.stats.health <=0)
 						{
-							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupied = false;
-							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupant = null;
-							enemy.move = () => {};
-							enemy.update_bounds = () => {};
-							enemy.update_darkness = () => {};
-							enemy.body = null;
-							enemy.destroy();
+							for(var i = 0; i < enemies.length; i++)
+							{
+								if(tile.occupant === enemies[i])
+								{
+									console.log('removed');
+									enemies.splice(i, 1);
+								}
+							}
+							try
+							{
+								tile2.occupant.visible = false;
+								tile2.occupant.move = () => {};
+								tile2.occupant.update_bounds = () => {};
+								tile2.occupant.update_darkness = () => {};
+								tile_data[layer1.getTileX(tile2.occupant.x)][layer1.getTileY(tile2.occupant.y)].occupied = false;
+								tile_data[layer1.getTileX(tile2.occupant.x)][layer1.getTileY(tile2.occupant.y)].occupant = null;
+							}catch(e)
+							{
+								console.log("tile2_err");
+							}
 						}
 						graphics.destroy();
 						attackbutton.visible = false;
@@ -686,26 +708,15 @@ function on_click(pointer, event)
 function darkmap_redraw()
 {// redraws the darkness 
 	dark.clean_darkmap();
-	ally.update_darkness(dark);
-	enemy.update_darkness(dark);
+	allies.forEach((obj) => {
+		obj.update_darkness(dark);
+	}, this);
+	enemies.forEach((obj) => {
+		obj.update_darkness(dark);
+	}, this);
 	dark.draw_darkmap();
 }// End darkmap_redraw 
 
-//button functions, up* functions are when the click is released, perform attack within this function.
-function upAttack()
-{// if attackbutton is pressed 
-	standbutton.visible = false;
-	attackbutton.visible = false;
-	mode = 3;
-}// End upAttack 
-
-function upStand() 
-{// if stand_button is pressed 	
-	standbutton.visible = false;
-	attackbutton.visible = false;
-	mode = 2;
-	turn_start = 1;
-}// End upStand 
 
 var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
@@ -714,79 +725,3 @@ gameOverScreen.prototype = {
 		console.log('u suk lel, git gud');
 	}
 }
-
-//need some detection to provide attack button when enemy is in range only
-/*
-function unpause(event)
-{
-	if(game.paused){
-		
-		var key_esc = game.input.keyboard.addKey(Phaser.Keyboard.ESC); //possibly make right click undo if we have time
-		key_esc.onDown.add(function(){
-		
-			// Remove the menu and the label
-			
-			//choiseLabel.destroy();
-			
-			// Unpause the game
-			
-		});
-	}
-}
-*/
-
-/*
-function draw(ally)
-{
-	counter = 0;
-	console.log('in draw ally');
-	//squareup = new Phaser.Rectangle(ally.x,ally.y-32,ally.x+32,ally.y);
-	//squarebot = new Phaser.Rectangle(ally.x,ally.y+32,ally.x+32,ally.y+32);
-	//squareleft = new Phaser.Rectangle(ally.x-32,ally.y,ally.x,ally.y+32);
-	//squareright = new Phaser.Rectangle(ally.x+32,ally.y,ally.x+32,ally.y+32);
-	
-	//game.debug.geom(squareup,'#EE6F6F');
-	//game.debug.geom(squarebot,'#EE6F6F');
-	//game.debug.geom(squareleft,'#EE6F6F');
-	//game.debug.geom(squareright,'#EE6F6F');
-	//really dumb way to draw four squares around characters, melee range.
-	
-	//clickcheck(); 
-}
-*/
-
-/*
-function clickclick(pointer, event)
-{
-	
-	var mouseindex_x = layer1.getTileX(game.input.activePointer.worldX);
-	var mouseindex_y = layer1.getTileY(game.input.activePointer.worldY);
-	var tile2 = tile_data[mouseindex_x][mouseindex_y];
-	
-	if(event.button == 0)
-	{
-		if(tile2 == tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)]||
-			tile2 == tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)]||
-			tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)]||
-			tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)])
-		{
-				if(tile2.occupant instanceof Enemy)
-				{
-					//if enemy, attack
-					enemy.stats.health = enemy.stats.health - (ally.stats.atk - enemy.stats.def);
-					enemy.children[0].change();
-					console.log("enemy_health" + enemy.stats.health);
-					game.paused = false;
-					graphics.destroy();
-					attackbutton.visible = false;
-					
-				}
-		}
-	}
-	else if(event.button == 2)
-	{
-		
-	}
-			
-}
-*/
