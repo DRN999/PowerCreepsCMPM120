@@ -45,7 +45,6 @@ Darkness.prototype.add_coord = function(x, y, alpha)
 
 Darkness.prototype.draw_darkmap = function()
 {// re_draws the darkmap 
-	console.log(this);
 	this.clear();
 	for(var i = 0; i < this.dark_map.length; i++)
 	{

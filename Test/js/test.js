@@ -26,18 +26,24 @@ var controller; // the invisable object that controls the camera
 var player; // the selection diamond(*diamond is placeholder )
 var ally; // ally unit 
 var enemy;
+var allies;
+var enemies;
 var hpbar;
 var attackbutton;
 var standbutton;
 
-
-var turn_start = 1;
+var turn_start = 1; // 1: indeicated the beginning of the turn 
+					// 2: indicated the end of the turn 
+					// 0: indicated middle of the turn 
 
 var player_turn = true;
 var mode = 0;
 /*
-* mode 0: your turn, nothing selected(hovering over things)
-* mode 1: selected ally unit 
+* mode 0:	your turn, nothing selected(hovering over things)
+* mode 1:	selected ally unit 
+* mode 2:	enemy turn 
+* mode 3:	player turn combat phase 
+* mode 50: 	do nothing until other events change the mode 
 */
 var menu = false;
 
@@ -45,7 +51,8 @@ var tile_data = init_tiledata(50,50);// contains the data of each tile
 
 var dark;
 
-window.onload = function() {
+window.onload = function() 
+{
 	game = new Phaser.Game(canvas_width, canvas_height, Phaser.AUTO, 'phaser');
 	game.state.add('Boot', boot);
 	game.state.add('Preload', preload);
@@ -67,6 +74,8 @@ boot.prototype = {
 		this.game.state.start('Preload');
 	}
 }
+
+/*
 
 var preload = function(game) {};
 preload.prototype = {
@@ -106,7 +115,9 @@ preload.prototype = {
 		// move to title screen
 		this.game.state.start('TitleScreen');
 	}
-}
+}// End preload 
+*/
+
 var preload = function(game) {};
 preload.prototype = {
 	preload: function() 
@@ -152,7 +163,8 @@ preload.prototype = {
 		// move to title screen
 		this.game.state.start('TitleScreen');
 	}
-}
+}// End preload 
+
 var titleScreen = function(game){};
 titleScreen.prototype = {
 	create: function() {
@@ -169,7 +181,7 @@ titleScreen.prototype = {
 	startIntro: function(){
 		game.state.start('IntroScreen');
 	}
-}
+}// End titleScreen 
 
 var introScreen = function(game){};
 introScreen.prototype = {
@@ -195,7 +207,7 @@ introScreen.prototype = {
 		// pass flags as parameters from intro to game based on player choice
 		game.state.start('PlayGame');
 	}
-}
+}// End introScreen 
 
 function init_tiledata(width, height) 
 {// inititalize tile_data 
@@ -221,7 +233,8 @@ function init_tiledata(width, height)
 
 var playGame = function(game){};
 playGame.prototype = {
-	init: function() {
+	init: function() 
+	{
 		// takes parameters passed from introScreen, determines things in level?
 	},
 
@@ -256,12 +269,19 @@ playGame.prototype = {
 
 		//  This resizes the game world to match the layer dimensions
 		// layer.resizeWorld();
+	   var tileArr = layer2.getTiles(0, 0, 2400, 2400);
+		for (var i = 0; i < tileArr.length; i++) {
+			if (tileArr[i].index != -1) {
+				tile_data[tileArr[i].x][tileArr[i].y].occupied = true;
+				tile_data[tileArr[i].x][tileArr[i].y].occupant = 'wall';
+				// console.log(tileArr[i].x + ', ' + tileArr[i].y);
+			}
+		}
 	   
 	   
 		dark = new Darkness(game, 50, 50);
 		game.add.existing(dark);
 		dark.draw_darkmap();
-		
 		
 		
 		// init ally
@@ -298,6 +318,21 @@ playGame.prototype = {
 		marker.lineStyle(2, 0xffffff, 1);
 		marker.drawRect(0, 0, 48, 48);
 		 
+		attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton', () => {
+			standbutton.visible = false;
+			attackbutton.visible = false;
+			mode = 3;
+		}, this);
+		attackbutton.visible = false;
+		
+		standbutton = game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton', () => {
+			standbutton.visible = false;
+			attackbutton.visible = false;
+			mode = 2;
+			turn_start = 1;
+		}, this);
+		standbutton.visible = false;
+		 
 		 // init controller 
 		controller = new Player(game, 'diamond', 0, 512, canvas_width/2 - 22, canvas_height/2 - 10, 1); // 512 is the size of the image 
 		controller.alpha = 0.0; 
@@ -323,17 +358,26 @@ playGame.prototype = {
 		player_turn.alpha = 0;
 		enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
 		enemy_turn.alpha = 0;
-	},
+		
+		
+		
+	}, // End create 
 
 	update: function()
-	{
-		if(enemy.body != null && enemy.stats.health<=0){
-			tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupied = false;
-			tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupant = null;
-			enemy.move = () => {};
-			enemy.body = null;
-			enemy.destroy();
-		}
+	{// do all the things in the begnning of the update function 
+		
+		// update the following obectes so that it constantly follows the camera
+		// UI should be done 
+		attackbutton.position.x = game.camera.x + 1140;
+		attackbutton.position.y = game.camera.y + 360;
+		
+		standbutton.position.x = game.camera.x + 1140;
+		standbutton.position.y = game.camera.y + 280;
+		
+		player_turn.position.y = game.camera.y + 250;
+		enemy_turn.position.y = game.camera.y + 250;
+		
+		
 		
 		// find the tile index coordinate of the tile the cursor is hovering over 
 		var index_x = layer1.getTileX(game.input.activePointer.worldX);
@@ -446,16 +490,39 @@ playGame.prototype = {
 						//console.log("health " + ally.stats.health);
 						//console.log("enemy_turn");
 						enemy.move(ally.x,ally.y);
-						
+						mode = 0;
+						turn_start = 1;
 						//console.log(ally.stats.health);
 					}
+				break;
+				
+				case 3: // combat_actions 
+					if(turn_start == 1)
+					{
+						var graphics = game.add.graphics();
+						graphics.beginFill(0xF88383, 0.5);
+						graphics.lineStyle(2, 0x0000FF, 0.5);
+						if(ally.tile_coord.y() < 49 && tile_data[ally.tile_coord.x()][ally.tile_coord.y() + 1].occupant != 'wall') graphics.drawRect(ally.x, ally.y+48, 48, 48);
+						if(ally.tile_coord.y() > 0 && tile_data[ally.tile_coord.x()][ally.tile_coord.y() - 1].occupant != 'wall') graphics.drawRect(ally.x, ally.y-48, 48, 48);
+						if(ally.tile_coord.x() > 0 && tile_data[ally.tile_coord.x() + 1][ally.tile_coord.y()].occupant != 'wall') graphics.drawRect(ally.x+48, ally.y, 48, 48);
+						if(ally.tile_coord.x() < 49 && tile_data[ally.tile_coord.x() - 1][ally.tile_coord.y()].occupant != 'wall') graphics.drawRect(ally.x-48, ally.y, 48, 48);
+						graphics.endFill();
+						window.graphics = graphics;
+						turn_start = 2;
+					}
+					else if(turn_start == 2)
+					{
+						
+					}
+				
 				break;
 				
 			}
 		}
 		
-	}
-}
+	}// End update 
+	
+}// End playGame
 
 function on_click(pointer, event)
 {// when the user clicks
@@ -516,33 +583,25 @@ function on_click(pointer, event)
 								turn_start = 1;
 								darkmap_redraw();
 								ally.bounds.alpha = 0.0;	
+								standbutton.visible = true;
+								
 								if(test_arr[0].index == -1)
 								{
 								
 									
-									game.paused = true;
+									//game.paused = true;
 									//here is where the menu should be called to pop up.
-						
+									
+									attackbutton.visible = false;
+									
 									if(tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
 										tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)].occupant instanceof Enemy ||
 										tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)].occupant instanceof Enemy ||
 										tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)].occupant instanceof Enemy)
 									{
-										attackbutton = game.add.button(game.camera.x + 1140, game.camera.y + 360, 'attackbutton');
-										attackbutton.onInputUp.add(upAttack, this);
-										attackbutton.onInputUp.add(overAttack, this);
-										mode = 2;
+										attackbutton.visible = true;
 									}
-									mode = 2;
-									//console.log("hello2");
-									
-									standbutton= game.add.button(game.camera.x + 1140, game.camera.y + 280, 'standbutton');
-									standbutton.onInputUp.add(upStand, this);
-									standbutton.onInputUp.add(overStand, this);
-									//maxhpbar.x = ally.x;
-									//maxhpbar.y = ally.y;
-									//currentbar.x = ally.x;
-									//currentbar.y = ally.y;
+									mode = 50;
 									
 								}
 							}, this);
@@ -575,70 +634,89 @@ function on_click(pointer, event)
 		break;
 		
 		case 2: break; // there should be nothing during mode 2
+		
+		
+		case 3: // combat mode 
+			var mouseindex_x = layer1.getTileX(game.input.activePointer.worldX);
+			var mouseindex_y = layer1.getTileY(game.input.activePointer.worldY);
+			var tile2 = tile_data[mouseindex_x][mouseindex_y];
 			
-	}
+			if(event.button == 0)
+			{
+				if(tile2 == tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)]||
+					tile2 == tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)]||
+					tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)]||
+					tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)])
+				{
+					if(tile2.occupant instanceof Enemy)
+					{
+						//if enemy, attack
+						enemy.stats.health = enemy.stats.health - (ally.stats.atk - enemy.stats.def);
+						enemy.children[0].change();
+						if(enemy.body != null && enemy.stats.health<=0)
+						{
+							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupied = false;
+							tile_data[layer1.getTileX(enemy.x)][layer1.getTileY(enemy.y)].occupant = null;
+							enemy.move = () => {};
+							enemy.update_bounds = () => {};
+							enemy.update_darkness = () => {};
+							enemy.body = null;
+							enemy.destroy();
+						}
+						graphics.destroy();
+						attackbutton.visible = false;
+						standbutton.visible = false;
+						mode = 2;
+						turn_start = 1;
+							
+					}
+				}
+			}
+			else if(event.button == 2)
+			{
+				
+			}
+		break;
+	}// End switch 
 	
 	
 	
 }// End on_click
 
 function darkmap_redraw()
-{
+{// redraws the darkness 
 	dark.clean_darkmap();
 	ally.update_darkness(dark);
 	enemy.update_darkness(dark);
 	dark.draw_darkmap();
-}
-	
+}// End darkmap_redraw 
+
+//button functions, up* functions are when the click is released, perform attack within this function.
+function upAttack()
+{// if attackbutton is pressed 
+	standbutton.visible = false;
+	attackbutton.visible = false;
+	mode = 3;
+}// End upAttack 
+
+function upStand() 
+{// if stand_button is pressed 	
+	standbutton.visible = false;
+	attackbutton.visible = false;
+	mode = 2;
+	turn_start = 1;
+}// End upStand 
+
 var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
 	create: function()
 	{
-		console.log('u suk lel');
+		console.log('u suk lel, git gud');
 	}
 }
 
-//button functions, up* functions are when the click is released, perform attack within this function.
-function upAttack() {
-	//draw(ally);
-	game.paused = false;
-    console.log('button up', arguments);
-	// attack should happen here
-	console.log('attack button pressed')
-	
-	counter = 0;
-	clickcheck(); 
-	
-	standbutton.destroy();
-	if(attack_button != null)
-		attackbutton.destroy();
-}
-
-
-function overAttack() {
-    console.log('button over');
-}
-
-
-
-function upStand() {
-   // console.log('button up', arguments);
-	//stand happens here
-	
-	
-	game.paused = false;
-	//placeholder.destroy();
-	
-	standbutton.destroy();
-	if(attackbutton != null)
-		attackbutton.destroy();
-}
-function overStand() {
-    //console.log('button over');
-}
-
 //need some detection to provide attack button when enemy is in range only
-
+/*
 function unpause(event)
 {
 	if(game.paused){
@@ -655,7 +733,9 @@ function unpause(event)
 		});
 	}
 }
+*/
 
+/*
 function draw(ally)
 {
 	counter = 0;
@@ -673,46 +753,40 @@ function draw(ally)
 	
 	//clickcheck(); 
 }
+*/
 
-var counter = 0;
-function clickcheck()
+/*
+function clickclick(pointer, event)
 {
-	game.paused = true;
-	console.log("enemy health" + enemy.stats.health);
-	console.log('in click');
-
-	//ally.map[map_x-1][map_y]
-	//ally.map[map_x+1][map_y]
-	//ally.map[map_x][map_y-1]
-	//ally.map[map_x][map_y+1]
-	game.input.onDown.add(click2, this)
-
-}
-
-function click2()
-{	
-
-	var index_x = layer1.getTileX(game.input.activePointer.worldX);
-	var index_y = layer1.getTileY(game.input.activePointer.worldY);
-	var tile = tile_data[index_x][index_y];
-	var map_y = ally.stats.movement + (index_x - layer1.getTileX(ally.x));
-	var map_x = ally.stats.movement + (index_y - layer1.getTileY(ally.y));
-	if(tile == ally.map[map_x-1][map_y] || tile ==	ally.map[map_x+1][map_y] ||ally.map[map_x][map_y-1] || ally.map[map_x][map_y+1]){
-		console.log("hello123");
-			if(tile.occupant == enemy && counter == 0){
-				
-				//if enemy, attack
-				console.log(counter);
-				counter++;
-				enemy.stats.health = enemy.stats.health - (ally.stats.atk + enemy.stats.def);
-				
 	
-			}
-	}
-	else{console.log("not in range");
-	mode = 0;
-	}
+	var mouseindex_x = layer1.getTileX(game.input.activePointer.worldX);
+	var mouseindex_y = layer1.getTileY(game.input.activePointer.worldY);
+	var tile2 = tile_data[mouseindex_x][mouseindex_y];
 	
-	game.paused = false;
+	if(event.button == 0)
+	{
+		if(tile2 == tile_data[layer1.getTileX(ally.x-48)][layer1.getTileY(ally.y)]||
+			tile2 == tile_data[layer1.getTileX(ally.x+48)][layer1.getTileY(ally.y)]||
+			tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y-48)]||
+			tile2 == tile_data[layer1.getTileX(ally.x)][layer1.getTileY(ally.y+48)])
+		{
+				if(tile2.occupant instanceof Enemy)
+				{
+					//if enemy, attack
+					enemy.stats.health = enemy.stats.health - (ally.stats.atk - enemy.stats.def);
+					enemy.children[0].change();
+					console.log("enemy_health" + enemy.stats.health);
+					game.paused = false;
+					graphics.destroy();
+					attackbutton.visible = false;
+					
+				}
+		}
+	}
+	else if(event.button == 2)
+	{
+		
+	}
+			
 }
-
+*/

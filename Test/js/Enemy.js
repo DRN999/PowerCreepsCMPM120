@@ -343,7 +343,6 @@ Enemy.prototype.move = function(allyx,allyy){
 						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
 						//this.update_bounds();
 						this.bounds.alpha = 0.0;
-						mode = 0; 
 						turn_start = 1;
 					}, this);
 				}

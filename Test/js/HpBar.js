@@ -53,8 +53,8 @@ HpBar.prototype.change = function()
 	//percentage = game.math.roundTo(character.stats.health/character.stats.maxhealth,-2);
 	//if(currentbar.width/maxbar.width > percentage){
 		//currentbar.width = currentbar.width - 0.2;
-		this.redraw();
-		game.camera.shake(0.005, 500); //the first is power of shaking, the second is the duration
-		game.camera.flash(0xff0000, 500);		//the first is the color, the second is the duration
+	this.redraw();
+	game.camera.shake(0.005, 500); //the first is power of shaking, the second is the duration
+	game.camera.flash(0xff0000, 500);		//the first is the color, the second is the duration
 	//}		//reduced slowly
 }
