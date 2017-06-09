@@ -101,18 +101,20 @@ preload.prototype = {
 		this.load.bitmapFont('MainFont', 'assets/font/font.png', 'assets/font/font.fnt');
 		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
 		// game.load.image('testButton', 'assets/img/platform.png');
-		game.load.image('playButton', 'assets/img/play.png');
+		game.load.image('playButton', 'assets/img/blood.png');
 		game.load.image('restartButton', 'assets/img/restart.png');
 		game.load.image('dayButton', 'assets/img/dayButton.png');
 		game.load.image('nightButton', 'assets/img/nightButton.png');
+		game.load.image('howToPlay', 'assets/img/howToPlay.png');
+
+		// how to play preload
+
 
 
 		// title and ending preload
-		game.load.image('TitleBG', 'assets/img/background1b.png');
+		game.load.image('TitleBG', 'assets/img/TitleScreennoBlood.png');
 	},
 	create: function() {
-		// preload the 9patch box
-		game.cache.addNinePatch('blue_button02', 'blueSheet', 'blue_button02.png', 10, 10, 10, 20);
 		// move to title screen
 		this.game.state.start('TitleScreen');
 	}
@@ -124,19 +126,36 @@ titleScreen.prototype = {
 		// splash background
 		game.add.sprite(0, 0, 'TitleBG');
 		// title
-		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'The Core', 120);
-		titleText.anchor.set(0.5);
+		// titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'The Core', 120);
+		// titleText.anchor.set(0.5);
 		// clickable buttons
-		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'playButton', this.startIntro);
-		startButton.anchor.set(0.5);
+		var startButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 3, 'playButton', this.startIntro);
+		// startButton.anchor.set(0.5);
+		startButton.scale.setTo(0.1);
+		var tutButton = game.add.button(canvas_width / 3, canvas_height - canvas_height /  4, 'howToPlay', this.startTut);
+		tutButton.anchor.set(0.5);
 	},
 	startIntro: function(){
 		game.state.start('IntroScreen');
+	},
+	startTut: function(){
+		game.state.start('HowTo');
 	}
 }
 
 
-var narrativeText = [
+var chapterText = [
+	"More than 50 years ago a war erupted in the Core. Political turmoil stirred in our homes, and we were forced to pick up arms. Once the ",
+	"smoke subsided, we were left with broken ties and spilt blood. The Core was split in two warring factions: South Core and North Core.",
+	"...",
+	"Fast forward to present day in North Core, where my family suffers under the grip of oppression. We remain outsiders to the rest of the",
+	"world - taught to believe that we are superior, but painfully aware of our reality. What glorious state such as ours would keep its own",
+	"citizens on the constant brink of famine and punish us for original thought? I can't believe that a government such as ours shines as the",
+	"pinnacle of society.",
+	"...",
+	"I have resolved to escape. A way to leave the Core will come soon. My family can only afford to send me, provided I can reach the destination.",
+	"Ahead lies a trial more difficult than I can imagine. I pray that I overcome it safely.",
+	"...",
 	"I overheard the barkeep's conversation with the captain of nightwatch. ",
 	"He said something along the lines of . . .",
 	". . .",
@@ -155,25 +174,95 @@ var lineIndex = 0;
 var wordDelay = 75;
 var lineDelay = 300;
 
-var choice = false; // default to day or night?
+var timeChoice = false; // default to day or night?
 
 var introScreen = function(game){};
 introScreen.prototype = {
 	create: function() {
-		// dialogue box test
-		// var dialogueBox = new Phaser.NinePatchImage(game, canvas_width / 2, 100, 'blue_button02');
-		// dialogueBox.anchor.set(0.5);
-		// dialogueBox.targetWidth = 900;
-		// dialogueBox.targetHeight = 100;
-		// dialogueBox.UpdateImageSizes();
 
 		// narrative introduction
-		text = game.add.text(32, 32, '', {font: "18px Arial", fill: "#ffffff"});
+		firstText = game.add.text(32, 32, '', {font: "18px Courier New", fill: "#ffffff"});
 		this.nextLine();
 
-		var nightButton = game.add.button(25, 400, 'nightButton', this.startGameNight);
-		var dayButton = game.add.button(canvas_width / 2 + 25, 400, 'dayButton', this.startGameDay);
+		var nightButton = game.add.button(25, 400, 'nightButton', this.playNight);
+		var dayButton = game.add.button(canvas_width / 2 + 25, 400, 'dayButton', this.playDay);
 		
+	},
+	nextLine: function() {
+ 		if (lineIndex === chapterText.length)
+    	{
+	        //  We're finished
+        	return;
+    	}
+
+    	//  Split the current line on spaces, so one word per array element
+    	line = chapterText[lineIndex].split(' ');
+
+    	// 	Reset the word index to zero (the first word in the line)
+    	wordIndex = 0;
+
+    	//  Call the 'nextWord' function once for each word in the line (line.length)
+    	game.time.events.repeat(wordDelay, line.length, this.nextWord, this);
+
+    	//  Advance to the next line
+    	lineIndex++;
+	},
+	nextWord: function() {
+		//  Add the next word onto the text string, followed by a space
+    	firstText.text = firstText.text.concat(line[wordIndex] + " ");
+
+    	//  Advance the word index to the next word in the line
+    	wordIndex++;
+
+    	//  Last word?
+    	if (wordIndex === line.length)
+    	{
+	        //  Add a carriage return
+        	firstText.text = firstText.text.concat("\n");
+
+        	//  Get the next line after the lineDelay amount of ms has elapsed
+        	game.time.events.add(lineDelay, this.nextLine, this);
+    	}
+
+	},
+	playNight: function() {
+		timeChoice = true;
+		game.state.start('PlayGame');
+
+	},
+	playDay: function() {
+		game.state.start('PlayGame');
+	}
+
+}
+
+// var narrativeText = [
+// 	"More than 50 years ago a war erupted in the Core. Political turmoil stirred in our homes, and we were forced to pick up arms. Once the ",
+// 	"smoke subsided, we were left with broken ties and spilt blood. The Core was split in two warring factions: South Core and North Core.",
+// 	"...",
+// 	"Fast forward to present day in North Core, where my family suffers under the grip of oppression. We remain outsiders to the rest of the",
+// 	"world - taught to believe that we are superior, but painfully aware of our reality. What glorious state such as ours would keep its own",
+// 	"citizens on the constant brink of famine and punish us for original thought? I can't believe that a government such as ours shines as the",
+// 	"pinnacle of society.",
+// 	"...",
+// 	"I have resolved to escape. A way to leave the Core will come soon. My family can only afford to send me, provided I can reach the destination.",
+// 	"Ahead lies a trial more difficult than I can imagine. I pray that I overcome it safely.",
+// 	"...",
+// ];
+
+var howToPlay = function(game){};
+howToPlay.prototype = {
+	create: function() {
+
+		// // narrative introduction: what is core, who are you, why do you need to escape
+		// introText = game.add.text(32, 32, '', {font: "18px Arial", fill: "#ffffff"});
+		// this.nextLine();
+		// // the decisions you will make
+		// // the obstacles you will face
+		// 	// to kill or to run
+		var playButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 3, 'playButton', this.startIntro);
+		// startButton.anchor.set(0.5);
+		playButton.scale.setTo(0.1);
 	},
 	nextLine: function() {
  		if (lineIndex === narrativeText.length)
@@ -196,7 +285,7 @@ introScreen.prototype = {
 	},
 	nextWord: function() {
 		//  Add the next word onto the text string, followed by a space
-    	text.text = text.text.concat(line[wordIndex] + " ");
+    	introText.text = introText.text.concat(line[wordIndex] + " ");
 
     	//  Advance the word index to the next word in the line
     	wordIndex++;
@@ -205,26 +294,15 @@ introScreen.prototype = {
     	if (wordIndex === line.length)
     	{
 	        //  Add a carriage return
-        	text.text = text.text.concat("\n");
+        	introText.text = introText.text.concat("\n");
 
         	//  Get the next line after the lineDelay amount of ms has elapsed
         	game.time.events.add(lineDelay, this.nextLine, this);
     	}
 
 	},
-	startGameNight: function() {
-		choice = true;
-		game.state.start('PlayGame');
-	},
-	startGameDay: function() {
-		game.state.start('PlayGame');
-	}
-}
-
-var howToPlay = function(game){};
-howToPlay.prototype = {
-	create: function() {
-		console.log('how to play');
+	startIntro: function() {
+		game.state.start('IntroScreen');
 	}
 }
 
@@ -275,7 +353,7 @@ playGame.prototype = {
 		}
 
 		dark = new Darkness(game, 50, 50);
-		if (choice == true) {
+		if (timeChoice == true) {
 			game.add.existing(dark);
 			dark.draw_darkmap();
 		}
@@ -384,9 +462,8 @@ gameOverScreen.prototype = {
 	create: function() {
 		console.log('game over');
 		// splash background
-		game.add.sprite(0, 0, 'TitleBG');
 		// title
-		titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'Game Over', 120);
+		titleText = game.add.bitmapText(canvas_width / 2, canvas_height - canvas_height / 5, 'MainFont', 'game over', 40);
 		titleText.anchor.set(0.5);
 		// clickable buttons
 		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'restartButton', this.restart);
