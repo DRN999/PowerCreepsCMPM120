@@ -1,9 +1,9 @@
-function Enemy(game, key, frame, size, p_x, p_y, scale) 
+function Enemy(game, key, frame, size, p_x, p_y, scalex, scaley) 
 {
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	counter = 1;
-	this.scale.x = scale // set the scales 
-	this.scale.y = scale; 
+	this.scale.x = scalex; // set the scales 
+	this.scale.y = scaley; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
@@ -15,7 +15,7 @@ function Enemy(game, key, frame, size, p_x, p_y, scale)
 		atk: 5,
 		spd: 4
 	};
-	
+	this.id = 0;
 	this.map = [ // the basic map 
 		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 		[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
@@ -75,20 +75,6 @@ Enemy.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	
 	this.dijkstra();
-	var tree = this.darkness_dijikstra();
-	for( var i = 0; i < tree.length; i++)
-	{
-		for(var j = 0; j < tree[i].length; j++)
-		{
-			var change_x = tree[i][j].x - this.stats.movement;
-			var change_y = tree[i][j].y - this.stats.movement;
-			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
-			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
-				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
-		}
-	}
-	dark.draw_darkmap();
-	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0xF88383, 1);
 	this.bounds.beginFill(0xF88383);
@@ -106,6 +92,23 @@ Enemy.prototype.update_bounds = function()
 		}
 	}
 }// End update_bounds 
+
+Enemy.prototype.update_darkness = function(dark)
+{// updates the tile light 
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+}// End update_darkness
+
 
 Enemy.prototype.update = function()
 {// update, change direction when the ship reaches the end of the screen 
@@ -163,11 +166,20 @@ Enemy.prototype.update_map_wall = function()
 				wall_arr.push({index: 100});
 	}
 	
+	
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
 		{
-			if(wall_arr[i * this.map_wall.length + j].index == -1)
+			
+			var x =  j + this.tile_coord.x() - this.stats.movement;
+			var y =  i + this.tile_coord.y() - this.stats.movement;
+			
+			if( x >= 0 && y >= 0 && x < 50 && y < 50 && tile_data[x][y].occupant instanceof Enemy && tile_data[x][y].occupant !== this)
+			{
+				this.map_wall[i][j] = 99;
+			}
+			else if(wall_arr[i * this.map_wall.length + j].index == -1)
 				this.map_wall[i][j] = 1;
 			else
 				this.map_wall[i][j] = 99;
@@ -307,39 +319,57 @@ Enemy.prototype.dijikstra_tree_search = function(x, y, tree, stack)
 }// End dijikstra_tree 
 
 
-Enemy.prototype.move = function(allyx,allyy){
-	var allyindex_x = (layer1.getTileX(allyx) - layer1.getTileX(this.x)) + this.stats.movement;
-	var allyindex_y = (layer1.getTileY(allyy) - layer1.getTileY(this.y)) + this.stats.movement;
+Enemy.prototype.move = function(last, prev)
+{
 	
-	//console.log(allyindex_x);
-	//console.log(allyindex_y);
+	this.update_bounds();
+	
+	var allyindex_x = (ally.tile_coord.x() - this.tile_coord.x()) + this.stats.movement;
+	var allyindex_y = (ally.tile_coord.y() - this.tile_coord.y()) + this.stats.movement;
+	
+	
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = false;
 	tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = null;
 	
 	if(this.map_bool[allyindex_y][allyindex_x])
 	{
+		
+		walk1.play();
 			var arr = new Array();
 			//console.log(this.dijikstra_tree);
 			this.dijikstra_tree_search(allyindex_x, allyindex_y, this.dijikstra_tree, arr);
 			if(arr.length > 0)
 				arr.pop();
 			//console.log(arr);
+			tile_data[this.tile_coord.x() + (arr[arr.length - 1].x - this.stats.movement)][this.tile_coord.y() + (arr[arr.length - 1].y - this.stats.movement)].occupied = true;
+			tile_data[this.tile_coord.x() + (arr[arr.length - 1].x - this.stats.movement)][this.tile_coord.y() + (arr[arr.length - 1].y - this.stats.movement)].occupant = this;
 			var prev_twn;
 			var first_twn;
 			for(var i = 0; i < arr.length; i++)
 			{// create chained tweens
 				var twn = game.add.tween(this);
-				if(i + 1 == arr.length)
+				if(i + 1 == arr.length && last)
 				{
 					twn.onComplete.add(() => {
 						mode = 0;
-						ally.stats.health = ally.stats.health - this.stats.atk;
-						//console.log("ally_health: " + ally.stats.health);
-						hpbar.change(ally);
-						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
-						tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
-						this.update_bounds();
+						ally.stats.health -= this.stats.atk;
+						if(ally.stats.health == 0)
+							ally.death_event();
+						ally.children[0].change();
+						
+						//this.update_bounds();
 						this.bounds.alpha = 0.0;
+						turn_start = 1;
+					}, this);
+				}
+				else if(i + 1 == arr.length)
+				{
+					twn.onComplete.add(() => {
+						//darkmap_redraw();
+						ally.stats.health -= this.stats.atk;
+						if(ally.stats.health == 0)
+							ally.death_event();
+						ally.children[0].change();
 					}, this);
 				}
 				twn.to(
@@ -353,19 +383,38 @@ Enemy.prototype.move = function(allyx,allyy){
 					first_twn = twn;
 				prev_twn = twn;	
 			}
-			first_twn.start();
 			mode = 50;
+			prev.chain(first_twn);
+			
+			return twn;
 			
 	}
-	else{
-			this.x = this.x-48;
-			this.y = this.y;
-			//console.log("no");
-			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupied = true;
-			tile_data[layer1.getTileX(this.x)][layer1.getTileY(this.y)].occupant = this;
-			this.update_bounds();
-			this.bounds.alpha = 0.0;
+	else
+	{
+			var twn = game.add.tween(this);
+			tile_data[layer1.getTileX(this.x - 48)][layer1.getTileY(this.y)].occupied = true;
+			tile_data[layer1.getTileX(this.x - 48)][layer1.getTileY(this.y)].occupant = this;
+			if(last)
+			{
+				twn.onComplete.add(() => {
+					walk1.play();
+					mode = 0;
+					turn_start = 1;
+					console.log('called');
+					this.update_bounds();
+					this.bounds.alpha = 0.0;
+				}, this);
+			}
+			twn.to(
+			{
+				x: this.x - 48,
+				y: this.y
+			}, 50, 'Linear', false, 0);
+			
+			mode = 50;
+			prev.chain(twn);
+			return twn;
 	}
 	
-	
+	return 'err';
 }

@@ -1,10 +1,10 @@
 
-function Ally(game, key, frame, size, p_x, p_y, scale) 
+function Ally(game, key, frame, size, p_x, p_y, scalex, scaley) 
 {// constructor 
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	
-	this.scale.x = scale // set the scales 
-	this.scale.y = scale; 
+	this.scale.x = scalex; // set the scales 
+	this.scale.y = scaley; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
@@ -31,6 +31,7 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	this.update_bounds();
 	this.bounds.alpha = 0.0;
 	this.dijikstra_tree;
+	this.death_event = () => {};
 	
 }// End create 
 
@@ -40,9 +41,6 @@ Ally.prototype.constructor = Ally;
 Ally.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	this.dijkstra();
-	this.update_darkness();
-	
-	dark.draw_darkmap();
 	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0x0000FF, 1);
@@ -62,7 +60,7 @@ Ally.prototype.update_bounds = function()
 	}
 }// End update_bounds 
 
-Ally.prototype.update_darkness = function()
+Ally.prototype.update_darkness = function(dark)
 {// updates the tile light 
 	var tree = this.darkness_dijikstra();
 	for( var i = 0; i < tree.length; i++)
@@ -157,18 +155,13 @@ Ally.prototype.update_map_wall = function()
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
-		{
-			//console.log(i + this.tile_coord.x() - this.stats.movement);
-			//console.log(j + this.tile_coord.y() - this.stats.movement);
-			//console.log(tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement]);
-			if(wall_arr[i * this.map_wall.length + j].index == -1)
-				this.map_wall[i][j] = 1;
-			else if(i + this.tile_coord.x() - this.stats.movement >= 0 && j + this.tile_coord.y() - this.stats.movement >= 0 && tile_data[i + this.tile_coord.x() - this.stats.movement][j + this.tile_coord.y() - this.stats.movement].occupant instanceof Enemy)
-			{	
-				//console.log(i + this.tile_coord.x() - this.stats.movement);
-				//console.log(j + this.tile_coord.y() - this.stats.movement);
+		{		
+			var x =  j + this.tile_coord.x() - this.stats.movement;
+			var y =  i + this.tile_coord.y() - this.stats.movement;
+			if( x >= 0 && y >= 0 && x < 50 && y < 50 && tile_data[x][y].occupant instanceof Enemy)
 				this.map_wall[i][j] = 99;
-			}
+			else if(wall_arr[i * this.map_wall.length + j].index == -1)
+				this.map_wall[i][j] = 1;
 			else
 				this.map_wall[i][j] = 99;
 		}

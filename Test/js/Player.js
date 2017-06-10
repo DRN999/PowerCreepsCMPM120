@@ -5,7 +5,7 @@ function Player(game, key, frame, size, p_x, p_y, scale)
 	
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	
-	this.scale.x = scale // set the scales 
+	this.scale.x = scale; // set the scales 
 	this.scale.y = scale; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
