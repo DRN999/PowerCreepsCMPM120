@@ -1,16 +1,17 @@
 
-function Ally(game, key, frame, size, p_x, p_y, scale) 
+function Ally(game, key, frame, size, p_x, p_y, scalex, scaley) 
 {// constructor 
 	Phaser.Sprite.call(this, game, p_x, p_y, key, frame);
 	
-	this.scale.x = scale // set the scales 
-	this.scale.y = scale; 
+	this.scale.x = scalex; // set the scales 
+	this.scale.y = scaley; 
 	game.physics.enable(this);
 	this.body.collideWorldBounds = false;
 	
 	this.stats = { // status of the ally 
 		movement: 7,
 		health: 20,
+		maxhealth:20,
 		def: 0,
 		atk: 5,
 		spd: 8
@@ -29,6 +30,8 @@ function Ally(game, key, frame, size, p_x, p_y, scale)
 	this.bounds = game.add.graphics();
 	this.update_bounds();
 	this.bounds.alpha = 0.0;
+	this.dijikstra_tree;
+	this.death_event = () => {};
 	
 }// End create 
 
@@ -38,20 +41,6 @@ Ally.prototype.constructor = Ally;
 Ally.prototype.update_bounds = function()
 {// updates the movement bound of the ally  
 	this.dijkstra();
-	
-	var tree = this.darkness_dijikstra();
-	for( var i = 0; i < tree.length; i++)
-	{
-		for(var j = 0; j < tree[i].length; j++)
-		{
-			var change_x = tree[i][j].x - this.stats.movement;
-			var change_y = tree[i][j].y - this.stats.movement;
-			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
-			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
-				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
-		}
-	}
-	dark.draw_darkmap();
 	
 	this.bounds.clear();
     this.bounds.lineStyle(2, 0x0000FF, 1);
@@ -70,6 +59,22 @@ Ally.prototype.update_bounds = function()
 		}
 	}
 }// End update_bounds 
+
+Ally.prototype.update_darkness = function(dark)
+{// updates the tile light 
+	var tree = this.darkness_dijikstra();
+	for( var i = 0; i < tree.length; i++)
+	{
+		for(var j = 0; j < tree[i].length; j++)
+		{
+			var change_x = tree[i][j].x - this.stats.movement;
+			var change_y = tree[i][j].y - this.stats.movement;
+			if(this.tile_coord.x() + change_x >= 0 && this.tile_coord.x() + change_x < 50
+			&& this.tile_coord.y() + change_y >= 0 && this.tile_coord.y() + change_x < 50)
+				dark.add_coord(this.tile_coord.x() + change_x, this.tile_coord.y() + change_y, 1 - i * 0.1);
+		}
+	}
+}// End update_darkness
 
 Ally.prototype.update = function()
 {// update, change direction when the ship reaches the end of the screen 
@@ -150,8 +155,12 @@ Ally.prototype.update_map_wall = function()
 	for(var i = 0; i < this.map_wall.length; i++)
 	{
 		for(var j = 0; j < this.map_wall[i].length; j++)
-		{
-			if(wall_arr[i * this.map_wall.length + j].index == -1)
+		{		
+			var x =  j + this.tile_coord.x() - this.stats.movement;
+			var y =  i + this.tile_coord.y() - this.stats.movement;
+			if( x >= 0 && y >= 0 && x < 50 && y < 50 && tile_data[x][y].occupant instanceof Enemy)
+				this.map_wall[i][j] = 99;
+			else if(wall_arr[i * this.map_wall.length + j].index == -1)
 				this.map_wall[i][j] = 1;
 			else
 				this.map_wall[i][j] = 99;
@@ -162,12 +171,13 @@ Ally.prototype.update_map_wall = function()
 
 Ally.prototype.dijkstra = function() 
 {// uses dijkstra's algorithm to compute the movement range of the character given the map_wall 
+
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
 	var current_y = this.stats.movement; // current node location y 
 	var current_node = new Array(); // current node tree 
-	current_node.push([{x: this.stats.movement, y: this.stats.movement}]);
+	current_node.push([{x: this.stats.movement, y: this.stats.movement, next: new Array()}]);
 	map_b[current_y][current_x] = true // init first boolean array point 
 	for(var iter = 0; iter < this.stats.movement; iter++)
 	{// iterates through the number of movements the character can make 
@@ -180,33 +190,44 @@ Ally.prototype.dijkstra = function()
 			// checks each side if it was already searched, and markes them as moveable  
 			if(this.map_wall[current_y - 1][current_x] != 99 && map_b[current_y - 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y - 1});
+				var obj = {x: current_x, y: current_y - 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y - 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x - 1] != 99 && map_b[current_y][current_x - 1] == false)
 			{
-				temp.push({x: current_x - 1, y: current_y});
+				var obj = {x: current_x - 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y][current_x - 1] = true;
 			}
 			if(this.map_wall[current_y + 1][current_x] != 99 && map_b[current_y + 1][current_x] == false)
 			{
-				temp.push({x: current_x, y: current_y + 1});
+				var obj = {x: current_x, y: current_y + 1, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y + 1][current_x] = true;
 			}
 			if(this.map_wall[current_y][current_x + 1] != 99 && map_b[current_y][current_x + 1] == false)
 			{
-				temp.push({x: current_x + 1, y: current_y});
+				var obj = {x: current_x + 1, y: current_y, next: new Array()};
+				current_node[iter][tr].next.push(obj);
+				temp.push(obj);
 				map_b[current_y][current_x + 1] = true;
 			}
 		}
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
+	
+	this.dijikstra_tree = current_node[0][0];
 	this.map_bool = map_b;// convert the main boolean map to this updated one 
 }// End dijkstra 
 
 Ally.prototype.darkness_dijikstra = function()
-{
+{// dijikstra search for light 
+
 	var map_b = this.get_new_map_boolean(); // init boolean 
 	this.update_map_wall(); // update the wall information 
 	var current_x = this.stats.movement; // current node location x
@@ -249,7 +270,29 @@ Ally.prototype.darkness_dijikstra = function()
 		
 		current_node.push(temp);// add the collected object-array to the main array 
 	}
-	console.log("darkness_dijikstra");
-	console.log(current_node);
+	
 	return current_node;
-}
+}// End darkness_dijikstra
+
+Ally.prototype.dijikstra_tree_search = function(x, y, tree, stack)
+{// search shortest path 
+	if(tree.next.length == 0)
+	{
+		if(tree.x == x && tree.y == y)
+		{
+			stack.push(tree);
+			return true;
+		}
+		return false;
+	}
+	for(var i = 0; i < tree.next.length; i++)
+	{
+		stack.push(tree);
+		if(tree.x == x && tree.y == y)
+			return true;
+		else if(this.dijikstra_tree_search(x, y, tree.next[i], stack))
+			return true;
+		stack.pop();
+	}
+	return false;
+}// End dijikstra_tree 
