@@ -7,6 +7,9 @@ var layer3;
 var canvas_width = 1280;
 var canvas_height = 720;
 var bmpText;
+var escape = false;
+var chapter = 0; // chapter iterating
+var score = 3; // survival choices affect this score, compromising choices decrease this score
 
 // movement booleans
 var move_up = false;
@@ -57,7 +60,7 @@ window.onload = function() {
 	game.state.add('Boot', boot);
 	game.state.add('Preload', preload);
 	game.state.add('TitleScreen', titleScreen);
-	game.state.add('IntroScreen', introScreen);
+	game.state.add('TextScreen', textScreen);
 	game.state.add('HowTo', howToPlay);
 	game.state.add('PlayGame', playGame);
 	game.state.add('GameOverScreen', gameOverScreen);
@@ -103,6 +106,7 @@ preload.prototype = {
 		// game.load.image('testButton', 'assets/img/platform.png');
 		game.load.image('playButton', 'assets/img/blood.png');
 		game.load.image('restartButton', 'assets/img/restart.png');
+		game.load.image('continueButton', 'assets/img/continueButton.png');
 		game.load.image('dayButton', 'assets/img/dayButton.png');
 		game.load.image('nightButton', 'assets/img/nightButton.png');
 		game.load.image('howToPlay', 'assets/img/howToPlay.png');
@@ -123,49 +127,73 @@ preload.prototype = {
 var titleScreen = function(game){};
 titleScreen.prototype = {
 	create: function() {
+		// reset game
+		chapter = 0;
+		score = 3;
+
 		// splash background
 		game.add.sprite(0, 0, 'TitleBG');
-		// title
-		// titleText = game.add.bitmapText(canvas_width / 2, 100, 'MainFont', 'The Core', 120);
-		// titleText.anchor.set(0.5);
-		// clickable buttons
-		var startButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 3, 'playButton', this.startIntro);
-		// startButton.anchor.set(0.5);
+		var startButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 5, 'playButton', this.startIntro);
+		startButton.anchor.set(0.5);
 		startButton.scale.setTo(0.1);
+		game.add.text(canvas_width - canvas_width / 3, canvas_height - canvas_height / 5, 'Play', {font: "18px Courier New", fill: "#ffffff"});
+
 		var tutButton = game.add.button(canvas_width / 3, canvas_height - canvas_height /  4, 'howToPlay', this.startTut);
 		tutButton.anchor.set(0.5);
 	},
 	startIntro: function(){
-		game.state.start('IntroScreen');
+		game.state.start('TextScreen');
 	},
 	startTut: function(){
 		game.state.start('HowTo');
 	}
 }
 
-
-var chapterText = [
-	"More than 50 years ago a war erupted in the Core. Political turmoil stirred in our homes, and we were forced to pick up arms. Once the ",
-	"smoke subsided, we were left with broken ties and spilt blood. The Core was split in two warring factions: South Core and North Core.",
-	"...",
-	"Fast forward to present day in North Core, where my family suffers under the grip of oppression. We remain outsiders to the rest of the",
-	"world - taught to believe that we are superior, but painfully aware of our reality. What glorious state such as ours would keep its own",
-	"citizens on the constant brink of famine and punish us for original thought? I can't believe that a government such as ours shines as the",
-	"pinnacle of society.",
-	"...",
-	"I have resolved to escape. A way to leave the Core will come soon. My family can only afford to send me, provided I can reach the destination.",
-	"Ahead lies a trial more difficult than I can imagine. I pray that I overcome it safely.",
-	"...",
+var chapter1Text = [
 	"I overheard the barkeep's conversation with the captain of nightwatch. ",
 	"He said something along the lines of . . .",
 	". . .",
     "Barkeep: It's going to be a big night, ain't it?",
-    "Captain: I sure hope so; 20 years and this is the thanks I get.",
+    "Captain: I sure hope so - 20 years and this is the thanks I get.",
 	". . .",
     "It sounds like the guards will be throwing the chief a party. That probably means less guards on duty tonight.",
-    "Should I try to make my way through during the day or at night?",
+    "It's short notice, but I might be able to save supplies by moving forward now rather than wait for daybreak.",
     "Visibility might be low though . . .",
+    "Should I try to make my way through during the day or at night?",
+    ". . .",
 ];
+
+var chapter2Text = [
+	". . .",
+	"Making it this far has been no easy task. We arrived just as the sun began to rise.",
+	"Perhaps we should rest for the day, and continue onward at night. It may cost",
+	"some time and valuable supplies, but . . .",
+	"The rest might do us some good.",
+	". . .",
+	"On the other hand . . .",
+	"If we push forward now, we can save our supplies and precious time",
+	"for when it really counts . . .",
+	"Should I push forward, or rest until night?",
+	". . .",
+];
+
+var chapter3Text = [
+	". . .",
+	"It's been rough, but we are almost there. Through some impossible stroke of luck,",
+	"I was able to locate where most of the local guard eat their dinner - a local kitchen",
+	"open to Core employees . . .",
+	"I have some medicine I was saving for emergencies, but if I pour it into their food,",
+	"it will keep them too occupied during the night to keep an actual watch",
+	". . .",
+	"On the other hand, I can save time and supplies by going now. Some of the guards will",
+	"be busy ordering their dinner, but there will still be a full duty roster. It's ",
+	"a risk . . . but it might be one worth taking.",
+	". . .",
+	"Should I wait for night and poison the guards' food, or simply move on?",
+	". . .",
+];
+
+var chapterText;
 
 var line = [];
 var wordIndex = 0;
@@ -176,16 +204,25 @@ var lineDelay = 300;
 
 var timeChoice = false; // default to day or night?
 
-var introScreen = function(game){};
-introScreen.prototype = {
+var textScreen = function(game){};
+textScreen.prototype = {
 	create: function() {
 
+		// reset timeChoice
+		timeChoice = false;
+		
+		// determine which text to display
+		if (chapter == 0) chapterText = chapter1Text;
+		else if (chapter == 1) chapterText = chapter2Text;
+		else chapterText = chapter3Text;
+
 		// narrative introduction
-		firstText = game.add.text(32, 32, '', {font: "18px Courier New", fill: "#ffffff"});
+		lineIndex = 0;
+		chText = game.add.text(32, 32, '', {font: "18px Courier New", fill: "#ffffff"});
 		this.nextLine();
 
-		var nightButton = game.add.button(25, 400, 'nightButton', this.playNight);
-		var dayButton = game.add.button(canvas_width / 2 + 25, 400, 'dayButton', this.playDay);
+		var nightButton = game.add.button(25, canvas_height - 100, 'nightButton', this.playNight);
+		var dayButton = game.add.button(canvas_width / 2 + 25, canvas_height - 100, 'dayButton', this.playDay);
 		
 	},
 	nextLine: function() {
@@ -209,7 +246,7 @@ introScreen.prototype = {
 	},
 	nextWord: function() {
 		//  Add the next word onto the text string, followed by a space
-    	firstText.text = firstText.text.concat(line[wordIndex] + " ");
+    	chText.text = chText.text.concat(line[wordIndex] + " ");
 
     	//  Advance the word index to the next word in the line
     	wordIndex++;
@@ -218,7 +255,7 @@ introScreen.prototype = {
     	if (wordIndex === line.length)
     	{
 	        //  Add a carriage return
-        	firstText.text = firstText.text.concat("\n");
+        	chText.text = chText.text.concat("\n");
 
         	//  Get the next line after the lineDelay amount of ms has elapsed
         	game.time.events.add(lineDelay, this.nextLine, this);
@@ -226,43 +263,50 @@ introScreen.prototype = {
 
 	},
 	playNight: function() {
+		if (chapter == 2) score --;
 		timeChoice = true;
 		game.state.start('PlayGame');
 
 	},
 	playDay: function() {
+		if (chapter == 0 || chapter == 1) score--;
 		game.state.start('PlayGame');
 	}
 
 }
 
-// var narrativeText = [
-// 	"More than 50 years ago a war erupted in the Core. Political turmoil stirred in our homes, and we were forced to pick up arms. Once the ",
-// 	"smoke subsided, we were left with broken ties and spilt blood. The Core was split in two warring factions: South Core and North Core.",
-// 	"...",
-// 	"Fast forward to present day in North Core, where my family suffers under the grip of oppression. We remain outsiders to the rest of the",
-// 	"world - taught to believe that we are superior, but painfully aware of our reality. What glorious state such as ours would keep its own",
-// 	"citizens on the constant brink of famine and punish us for original thought? I can't believe that a government such as ours shines as the",
-// 	"pinnacle of society.",
-// 	"...",
-// 	"I have resolved to escape. A way to leave the Core will come soon. My family can only afford to send me, provided I can reach the destination.",
-// 	"Ahead lies a trial more difficult than I can imagine. I pray that I overcome it safely.",
-// 	"...",
-// ];
+var narrativeText = [
+	"More than 50 years ago a war erupted in the Core. Political turmoil stirred in our homes,", 
+	"and we were forced to pick up arms. Once the smoke subsided, we were left with broken ties",
+	" and spilt blood. The Core was split in two warring factions: South Core and North Core.",
+	". . .",
+	"Fast forward to present day in North Core, where my family suffers under the grip of oppression.",
+	"We remain outsiders to the rest of the world - taught to believe that we are superior, but",
+	"painfully aware of our reality. What glorious state such as ours would keep its own citizens on",
+	"the constant brink of famine and punish us for original thought? I can't believe that a government",
+	"such as ours shines as the pinnacle of society.",
+	". . .",
+	"I have resolved to escape. A way to leave the Core will come soon. My family can only afford to",
+	"send me, provided I can reach the destination. Ahead lies a trial more difficult than I can imagine.",
+	"I pray that I overcome it safely.",
+	". . .",
+];
 
 var howToPlay = function(game){};
 howToPlay.prototype = {
 	create: function() {
-
 		// // narrative introduction: what is core, who are you, why do you need to escape
-		// introText = game.add.text(32, 32, '', {font: "18px Arial", fill: "#ffffff"});
-		// this.nextLine();
+		lineIndex = 0;
+		introText = game.add.text(32, 32, '', {font: "18px Courier New", fill: "#ffffff"});
+		this.nextLine();
 		// // the decisions you will make
 		// // the obstacles you will face
 		// 	// to kill or to run
-		var playButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 3, 'playButton', this.startIntro);
-		// startButton.anchor.set(0.5);
-		playButton.scale.setTo(0.1);
+		var startButton = game.add.button(canvas_width - canvas_width / 3, canvas_height - canvas_height / 5, 'playButton', this.startIntro);
+		startButton.anchor.set(0.5);
+		startButton.scale.setTo(0.1);
+		game.add.text(canvas_width - canvas_width / 3, canvas_height - canvas_height / 5, 'Play', {font: "18px Courier New", fill: "#ffffff"});
+
 	},
 	nextLine: function() {
  		if (lineIndex === narrativeText.length)
@@ -302,7 +346,7 @@ howToPlay.prototype = {
 
 	},
 	startIntro: function() {
-		game.state.start('IntroScreen');
+		game.state.start('TextScreen');
 	}
 }
 
@@ -449,7 +493,13 @@ playGame.prototype = {
 		}
 
 		if (endTile.occupant == ally) {
-			game.state.start('GameOverScreen');
+			if (chapter == 2) {
+				escape = true;
+				game.state.start('GameOverScreen');
+			} else {
+				chapter++;
+				game.state.start('TextScreen');
+			}
 		}
 
 		// if player reaches certain tile, go to gameover state
@@ -457,17 +507,139 @@ playGame.prototype = {
 	} // end update
 }
 
+var bestEnding = [ // 3/3 survival points and escaped
+	"Today we leave behind the Core. We free ourselves of its oppression, and pray",
+	"that tomorrow will bring opportunity. Even if we are no longer subject to",
+	"North Core's power, we still have family back there.",
+	". . .",
+	"It's not over. I must fight to earn what I can so that someday we can be",
+	"together again. So that we can be free.",
+	". . .",
+	"It's strange . . .",
+	". . .",
+	"The sunrise never looked so bright . . .",
+];
+
+var goodEnding = [ // 2/3 survival points and escaped
+	"We left the Core behind, but it was more difficult than we ever anticipated. We bear",
+	"scars - mental and physical - that will never heal. We've hurt others to get to where we are, and put",
+	"our bodies and minds through an unforgettable hell.",
+	". . .",
+	"These scars remind us that it will never be over. Though we escaped, our families",
+	"remain in the Core. We must continue to fight, so that someday we can all be together",
+	"again. Even so . . .",
+	". . . ",
+	"On that day, will we finally be free?",
+	". . .",
+	"We watched as the sun rose above the horizon, and,",
+	"for a moment,",
+	". . .",
+	"I felt at ease.",
+];
+
+var okayEnding = [ // 1/3 survival points and escaped
+	"I could see the sunrise clearly over the horizon, and I felt my heart stop beating.",
+	"We left the Core far behind us, but at a cost we may not ever recover. I held my partner's",
+	"hand tightly, but could not feel her return my grip.",
+	"I studied her face - weak and unresponsive to my tearful calls.",
+	". . .",
+	"She died soon after. I could do nothing but be a hand to hold. What was it that brought us to this point?",
+	"Time? Hunger? Sickness?",
+	". . .",
+	"I don't know much time I spent by her side. When my eyes finally dried,",
+	"I looked to the horizon.",
+	". . .",
+	"When did night fall?",
+];
+
+var badEnding = [ // 0/3 survival points and escaped
+	". . .",
+	"We barely escaped from North Core.",
+	". . .",
+	"Is it night? Day? I . . .",
+	"I could barely open my eyes. It was dark out. I can't see a thing.",
+	". . .",
+	"I felt a light touch brush against my hand. I struggled to squeeze out a single word - the name of my partner.",
+	"\"Ren?\"",
+	". . .",
+	"No response, but I felt the warmth of her hand in mine.",
+	"I try to respond with a more firm grasp, but my fingers wouldn't respond.",
+	". . .",
+	"\"Ren?\", I repeated.",
+	". . .",
+	"Soon her warmth disappeared. Night, day, whatever time it was, it didn't matter. I couldn't see beyond the tears in my eyes.",
+	"We made it this far, only to die? Here?",
+	"It's not fair.",
+	". . .",
+	"\"I'm sorry . . .\"",
+	"It didn't matter that we escaped. I just want another chance to be with my family.",
+	". . .",
+];
+
+var deathEnding = [ // did not escape
+	"I died.",
+];
+
+var ending = [];
+
 var gameOverScreen = function(game){};
 gameOverScreen.prototype = {
 	create: function() {
 		console.log('game over');
-		// splash background
-		// title
-		titleText = game.add.bitmapText(canvas_width / 2, canvas_height - canvas_height / 5, 'MainFont', 'game over', 40);
-		titleText.anchor.set(0.5);
+		// if escape == true, good ending text
+		if (escape == true) {
+			if (score == 3) ending = bestEnding;
+			else if (score == 2) ending = goodEnding;
+			else if (score == 1) ending = okayEnding;
+			else ending = badEnding;
+		} else ending = deathEnding;
+
+		lineIndex = 0;
+		endingText = game.add.text(32, 32, '', {font: "18px Courier New", fill: "#ffffff"});
+		this.nextLine();
 		// clickable buttons
-		var startButton = game.add.button(canvas_width / 2, canvas_height / 2, 'restartButton', this.restart);
+		var startButton = game.add.button(canvas_width / 2, canvas_height - canvas_height / 5, 'restartButton', this.restart);
 		startButton.anchor.set(0.5);
+	},
+	nextLine: function() {
+		if(escape == true) {
+	 		if (lineIndex === ending.length)
+	    	{
+		        //  We're finished
+	        	return;
+	    	}
+    	}
+
+    	//  Split the current line on spaces, so one word per array element
+    	if (escape == true) {
+	    	line = ending[lineIndex].split(' ');
+	    }
+    	// 	Reset the word index to zero (the first word in the line)
+    	wordIndex = 0;
+
+    	//  Call the 'nextWord' function once for each word in the line (line.length)
+    	game.time.events.repeat(wordDelay, line.length, this.nextWord, this);
+
+    	//  Advance to the next line
+    	lineIndex++;
+	},
+	nextWord: function() {
+		//  Add the next word onto the text string, followed by a space
+    	endingText.text = endingText.text.concat(line[wordIndex] + " ");
+
+    	//  Advance the word index to the next word in the line
+    	wordIndex++;
+
+    	//  Last word?
+    	if (wordIndex === line.length)
+    	{
+	        //  Add a carriage return
+        	endingText.text = endingText.text.concat("\n");
+
+        	//  Get the next line after the lineDelay amount of ms has elapsed
+        	game.time.events.add(lineDelay, this.nextLine, this);
+    	}
+
 	},
 	restart: function(){
 		game.state.start('TitleScreen');
