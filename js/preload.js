@@ -18,14 +18,6 @@ preload.prototype = {
 		game.load.image('Outside3', 'assets/tileset/SF_Outside_A5.png');
 		game.load.image('Outside4', 'assets/tileset/SF_Outside_B.png');
 		game.load.image('Outside5', 'assets/tileset/SF_Outside_C.png');
-		game.load.image('diamond','assets/img/diamond.png');
-		game.load.image('Square', 'assets/img/Square.jpg');
-		game.load.image('placeholder', 'assets/img/placeholder.png');
-		game.load.image('standbutton', 'assets/img/standbutton.png');
-		game.load.image('attackbutton', 'assets/img/attackbutton.png');
-		this.load.bitmapFont('MainFont', 'assets/font/font.png', 'assets/font/font.fnt');
-		game.load.atlasXML('blueSheet', 'assets/UIpack/blueSheet.png', 'assets/UIpack/blueSheet.xml');
-		game.load.image('testButton', 'assets/img/platform.png');
 		game.load.audio('click1','assets/audio/SE/click1.wav');
 		game.load.audio('click2','assets/audio/SE/click2.wav');
 		game.load.audio('hit1','assets/audio/SE/hit1.wav');
@@ -54,7 +46,10 @@ preload.prototype = {
 		game.load.image('restartButton', 'assets/img/restart.png');
 		game.load.image('dayButton', 'assets/img/dayButton.png');
 		game.load.image('nightButton', 'assets/img/nightButton.png');
-
+		game.load.image('diamond','assets/img/diamond.png');
+		game.load.image('standbutton', 'assets/img/standbutton.png');
+		game.load.image('attackbutton', 'assets/img/attackbutton.png');
+		
 	},
 	
 	create: function() {

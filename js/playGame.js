@@ -35,11 +35,6 @@ playGame.prototype = {
 	tile_data: init_tiledata(50,50),// contains the data of each tile 
 		
 	dark: 0,
-	
-	init: function() 
-	{
-		// takes parameters passed from introScreen, determines things in level?
-	},
 
 	create: function() 
 	{ // 
@@ -51,7 +46,7 @@ playGame.prototype = {
 		game.canvas.oncontextmenu = function (e) { e.preventDefault(); } // negate right click menu 
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 	   // game.stage.backgroundColor = '#787878';
-		this.map = game.add.tilemap('test'); 
+		this.map = game.add.tilemap('test');
 		//  The first parameter is the tileset name, as specified in the Tiled this.map editor (and in the tilemap json file)
 		//  The second parameter maps this name to the Phaser.Cache key 'tiles'
 		this.map.addTilesetImage('Outside1','Outside1');
@@ -79,7 +74,6 @@ playGame.prototype = {
 			if (tileArr[i].index != -1) {
 				this.tile_data[tileArr[i].x][tileArr[i].y].occupied = true;
 				this.tile_data[tileArr[i].x][tileArr[i].y].occupant = 'wall';
-				// console.log(tileArr[i].x + ', ' + tileArr[i].y);
 			}
 		}
 	   
@@ -195,13 +189,19 @@ playGame.prototype = {
 		this.enemy_turn = game.add.sprite(1280, 250, 'enemy_turn');
 		this.enemy_turn.alpha = 0;
 		
-		
-		
 	}, // End create 
 
 	update: function()
 	{// do all the things in the begnning of the update function 
-		
+		// if (endTile.occupant == ally) {
+		// 	if (chapter == 2) {
+		// 		escape = true;
+		// 		game.state.start('GameOverScreen');
+		// 	} else {
+		// 		chapter++;
+		// 		game.state.start('TextScreen');
+		// 	}
+		// }
 		// update the following obectes so that it constantly follows the camera
 		// UI should be done 
 		this.attackbutton.position.x = game.camera.x + 1140;
